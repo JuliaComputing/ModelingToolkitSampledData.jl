@@ -4,7 +4,6 @@ authors = ["Fredrik Bagge Carlson"]
 version = "0.1.0"
 
 [deps]
-ControlSystemsBase = "aaaaaaaa-a6ca-5380-bf3e-84a91bcd477e"
 JuliaSimCompiler = "8391cb6b-4921-5777-4e45-fd9aab8cb88d"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 ModelingToolkitStandardLibrary = "16a59e39-deab-5bd0-87e4-056b12336739"
@@ -18,7 +17,8 @@ SymbolicIndexingInterface = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
 julia = "1.10"
 
 [extras]
+ControlSystemsBase = "aaaaaaaa-a6ca-5380-bf3e-84a91bcd477e"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["ControlSystemsBase", "Test"]
