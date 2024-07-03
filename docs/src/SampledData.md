@@ -165,6 +165,11 @@ In this component, we use two structural parameters, one for the sample time and
 
 In order to make components maximally generic, it is often advisable to avoid including operators like `Sample` and `Hold` at the inputs and outputs of a component, and instead let the user manually insert these operators where required. Larger components that model complete sampled-data systems may of course contain such operators internally. 
 
+## Linearization of sampled-data systems
+Linearization of discrete-time and sampled-data systems using the tools described at [Linearization of ModelingToolkit models](https://docs.sciml.ai/ModelingToolkit/dev/basics/Linearization/) is __not__ supported at the moment. 😦 
+
+Linearization through [frequency-response analysis (FRA) is provided in JuliaSimControl](https://help.juliahub.com/juliasimcontrol/dev/linear_analysis/#Frequency-response-analysis). FRA amounts to simulating a system with wide-spectrum inputs and computing the linear small-signal transfer function using techniques from the field of system-identification.
+
 
 ## A complete example
 
@@ -239,3 +244,7 @@ catch err
 end
 ```
 The error message indicates that the -1 shift for `f.x` is not provided. The number `0.5` appearing in the error message is the period of the clock associated the variable for which an initial condition is missing `f.x`.
+
+
+## Further reading
+- [Analysis of linear sampled-data systems using ControlSystems.jl](https://juliacontrol.github.io/ControlSystems.jl/stable/examples/zoh/)
