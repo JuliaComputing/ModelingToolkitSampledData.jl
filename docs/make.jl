@@ -8,6 +8,10 @@ DocMeta.setdocmeta!(ModelingToolkitSampledData, :DocTestSetup, :(using ModelingT
 
 makedocs(;
          modules = [ModelingToolkitSampledData],
+        #  remotes = Dict(
+        #     dirname(dirname(pathof(ModelingToolkit))) => (Remotes.GitHub("SciML", "ModelingToolkit.jl"), "9"),
+        #     dirname(dirname(pathof(ModelingToolkitStandardLibrary))) => (Remotes.GitHub("SciML", "ModelingToolkitStandardLibrary.jl"), "2"),
+        # ),
          authors = "Fredrik Bagge Carlson, JuliaHub Inc.",
          #  strict = [:example_block, :setup_block, :eval_block],
          sitename = "ModelingToolkitSampledData.jl",
@@ -26,7 +30,8 @@ makedocs(;
                 "Controlled DC motor" => "examples/dc_motor_pi.md",
              ],
              "Block library" => "blocks.md",
-         ])
+         ],
+)
 
 deploydocs(;
            repo = "github.com/JuliaComputing/ModelingToolkitSampledData.jl",
