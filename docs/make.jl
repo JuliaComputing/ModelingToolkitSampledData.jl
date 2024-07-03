@@ -24,7 +24,7 @@ makedocs(;
          pages = [
              "Home" => "index.md",
              "Tutorials" => [
-                "Sampled-Data Systems" => "SampledData.md",
+                "Getting started with Sampled-Data Systems" => "SampledData.md",
              ],
              "Examples" => [
                 "Controlled DC motor" => "examples/dc_motor_pi.md",

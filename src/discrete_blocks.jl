@@ -48,7 +48,7 @@ Initial value of integrator state ``x`` can be set with `x`
         k = 1, [description = "Gain"]
     end
     @structural_parameters begin
-        Ts = ModelingToolkit.SampleTime()
+        Ts = SampleTime()
         z = ShiftIndex()
     end
     @equations begin

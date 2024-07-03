@@ -10,6 +10,8 @@ A sampled-data system contains both continuous-time and discrete-time components
     
     The initial release of the sampled-data interface **only supports negative shifts**.
 
+
+## Clocks, operators and difference equations
 A clock can be seen as an *event source*, i.e., when the clock ticks, an event is generated. In response to the event the discrete-time logic is executed, for example, a control signal is computed. For basic modeling of sampled-data systems, the user does not have to interact with clocks explicitly, instead, the modeling is performed using the operators
 
   - [`Sample`](@ref)
@@ -142,6 +144,25 @@ Discrete-time variables can be accessed with the syntax
 sol[var]
 ```
 
+## Implementing generic discrete components
+Discrete-time components can be implemented without specification of the clock or sample interval. To do this, the operator `SampleTime()` is used, it returns the sample-time interval of the associated clock. See the library of components for usage example, or this simplified example component:
+```julia
+@mtkmodel DiscreteDerivative begin
+    @extend u, y = siso = SISO()
+    @parameters begin
+        k = 1, [description = "Gain"]
+    end
+    @structural_parameters begin
+        Ts = SampleTime()
+        z = ShiftIndex()
+    end
+    @equations begin
+        y(z) ~ k * (u(z) - u(z - 1)) / Ts # Ts will get the value of the associated clock, determined by clock inference.
+    end
+end
+```
+In this component, we use two structural parameters, one for the sample time and one for the shift index. By letting the sample time be a structural parameter with a default given by `SampleTime()`, the default behavior is to inherit the sample time based on the connection context (clock partition) of the component. The sample time can still be manually set in case there is no other point at which to infer the sample time, or if the user for some other reason want to override the sample time. The shift index is also a structural parameter with a default. This default leaves the clock unspecified, indicating that the clock should be inherited based on the connection context (clock partition). If the user provides a shift index with a clock specified, other components may inherit their clock from this component. The operator `SampleTime()` will in all cases return the sample time of the associated clock, no matter if this clock is explicitly specified by the user or inherited from the connection context.
+
 
 ## A complete example
 
@@ -207,7 +228,7 @@ sol = solve(prob, Tsit5())
 plot(sol, idxs=[cl.p.x, cl.c.ud], layout=(2,1))
 ```
 
-Not how the initial condition provided above refers to the value of `f.x` at a past time point. If we had not provided this initial condition, we would have gotten an error like this
+Note how the initial condition provided above refers to the value of `f.x` at a past time point. If we had not provided this initial condition, we would have gotten an error like this
 ```@example clocks
 try
     ODEProblem(ssys, [], (0,15))
