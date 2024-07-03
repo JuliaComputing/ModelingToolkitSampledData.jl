@@ -137,6 +137,11 @@ ud2 ~ kp * (Sample(dt2)(r) - yd2)
 `yd1` and `ud1` belong to the same clock which ticks with an interval of `dt1`, while `yd2` and `ud2` belong to a different clock which ticks with an interval of `dt2`. The two clocks are *not synchronized*, i.e., they are not *guaranteed* to tick at the same point in time, even if one tick interval is a rational multiple of the other. Mechanisms for synchronization of clocks are not yet implemented.
 
 ## Accessing discrete-time variables in the solution
+Discrete-time variables can be accessed with the syntax
+```julia
+sol[var]
+```
+
 
 ## A complete example
 
