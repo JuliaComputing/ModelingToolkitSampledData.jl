@@ -23,6 +23,7 @@ makedocs(;
                 "Sampled-Data Systems" => "SampledData.md",
              ],
              "Examples" => [
+                "Controlled DC motor" => "examples/dc_motor_pi.md",
              ],
              "Blocks" => "blocks.md",
          ])
