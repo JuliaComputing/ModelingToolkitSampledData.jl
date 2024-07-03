@@ -1,0 +1,13 @@
+name = "ModelingToolkitSampledData"
+uuid = "2363c322-4785-4cde-be74-4d9c1119527e"
+authors = ["Fredrik Bagge Carlson"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.10"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
