@@ -56,9 +56,9 @@ connections = [connect(fixed.flange, emf.support, friction.flange_b)
                connect(inertia.flange_b, speed_sensor.flange)
                connect(load_step.output, load.tau)
                connect(ref.output, feedback.input1)
-               connect(speed_sensor.w, :y, feedback.input2)
+               connect(speed_sensor.w, feedback.input2)
                connect(feedback.output, pi_controller.err_input)
-               connect(pi_controller.ctr_output, :u, source.V)
+               connect(pi_controller.ctr_output, source.V)
                connect(source.p, R1.p)
                connect(R1.n, L1.p)
                connect(L1.n, emf.p)
@@ -101,54 +101,17 @@ p2 = Plots.plot(sol.t, sol[load.tau.u], ylabel = "Disturbance in Nm", label = ""
 Plots.plot(p1, p2, layout = (2, 1))
 ```
 
-## Closed-loop analysis
-
-When implementing and tuning a control system in simulation, it is a good practice to analyze the closed-loop properties and verify robustness of the closed-loop with respect to, e.g., modeling errors. To facilitate this, we added two analysis points to the set of connections above, more specifically, we added the analysis points named `:y` and `:u` to the connections (for more details on analysis points, see [Linear Analysis](@ref))
-
-```julia
-connect(speed_sensor.w, :y, feedback.input2)
-connect(pi_controller.ctr_output, :u, source.V)
-```
-
-one at the plant output (`:y`) and one at the plant input (`:u`). We may use these analysis points to calculate, e.g., sensitivity functions, illustrated below. Here, we calculate the sensitivity function $S(s)$ and the complimentary sensitivity function $T(s) = I - S(s)$, defined as
-
-```math
-\begin{aligned}
-S(s) &= \dfrac{1}{I + P(s)C(s)} \\
-T(s) &= \dfrac{P(s)C(s)}{I + P(s)C(s)}
-\end{aligned}
-```
-
-```@example dc_motor_pi
-using ControlSystemsBase
-matrices_S, simplified_sys = Blocks.get_sensitivity(
-    model, :y, op = Dict(unknowns(sys) .=> 0.0))
-So = ss(matrices_S...) |> minreal # The output-sensitivity function as a StateSpace system
-matrices_T, simplified_sys = Blocks.get_comp_sensitivity(
-    model, :y, op = Dict(inertia.phi => 0.0, inertia.w => 0.0))
-To = ss(matrices_T...)# The output complementary sensitivity function as a StateSpace system
-bodeplot([So, To], label = ["S" "T"], plot_title = "Sensitivity functions",
-    plotphase = false, hz = true)
-```
-
-Similarly, we may compute the loop-transfer function and plot its Nyquist curve
-
-```@example dc_motor_pi
-matrices_L, simplified_sys = Blocks.get_looptransfer(
-    model, :y, op = Dict(unknowns(sys) .=> 0.0))
-Lo = -ss(matrices_L...) # The loop-transfer function as a StateSpace system. The negative sign is to negate the built-in negative feedback
-Ms, ωMs = hinfnorm(So) # Compute the peak of the sensitivity function to draw a circle in the Nyquist plot
-nyquistplot(Lo, label = "\$L(s)\$", ylims = (-2.5, 0.5), xlims = (-1.2, 0.1),
-    Ms_circles = Ms)
-```
 
 ## Discrete-time controller
 
 Until now, we have modeled both the physical part of the system, the DC motor, and the control systems, in continuous time. In practice, it is common to implement control systems on a computer operating at a fixed sample rate, i.e, in discrete time. A system containing both continuous-time parts and discrete-time parts is often referred to as a "sampled-data system", and the ModelingToolkit standard library contains several components to model such systems.
 
-Below, we re-model the system, this time with a discrete-time controller: `Blocks.DiscretePIDStandard`. To interface between the continuous and discrete parts of the model, we make use of a [`Sampler`](@ref) and [`ZeroOrderHold`](@ref) blocks. Apart from the three aforementioned components, the model is the same as before.
+Below, we re-model the system, this time with a discrete-time controller: [`DiscretePIDStandard`](@ref). To interface between the continuous and discrete parts of the model, we make use of a [`Sampler`](@ref) and [`ZeroOrderHold`](@ref) blocks. Apart from the three aforementioned components, the model is the same as before.
 
 ```@example dc_motor_pi
+using ModelingToolkitSampledData
+using JuliaSimCompiler
+
 z = ShiftIndex()
 @mtkmodel DiscreteClosedLoop begin
     @structural_parameters begin
@@ -196,11 +159,10 @@ end
 
 @named disc_model = DiscreteClosedLoop()
 disc_model = complete(disc_model)
-ssys = structural_simplify(IRSystem(disc_model))
+ssys = structural_simplify(IRSystem(disc_model)) # Conversion to an IRSystem from JuliaSimCompiler is required for sampled-data systems
 
 disc_prob = ODEProblem(ssys, [unknowns(disc_model) .=> 0.0; disc_model.pi_controller.I(z-1) => 0; disc_model.pi_controller.eI(z-1) => 0], (0, 4.0))
 disc_sol = solve(disc_prob, Tsit5())
-
 
 Plots.plot(sol.t, sol[inertia.w], ylabel = "Angular Vel. in rad/s",
     label = "Measurement (cont. controller)", title = "DC Motor with Speed Controller")
@@ -218,14 +180,13 @@ In the plot above, we compare the result of the discrete-time control system to 
     @components begin
         inner = DiscreteClosedLoop(use_ref = false)
         sampler = Sampler(clock = Clock(0.004))
-        # cc = Gain(k = 1)
         cc = ClockChanger(from = Blocks.clock(sampler), to = Blocks.clock(inner.sampler))
+        # cc = Gain(k = 1)
         # cc = SISO()
         ref = Blocks.Ramp(height = 1, start_time = 0.1, duration = 0.9, smooth = false)
         ref_diff = Blocks.DiscreteDerivative() # This will differentiate q_ref to q̇_ref
         add = Blocks.Add()      # The middle ∑ block in the diagram
         p_controller = Blocks.DiscretePIDStandard(K = 20, with_D = false, with_I = false)
-        id = Blocks.Gain(k = 1.0)  # a trivial identity element to allow us to place the analysis point :r in the right spot
     end
     @parameters begin
         O = 0
@@ -238,8 +199,7 @@ In the plot above, we compare the result of the discrete-time control system to 
         # cc.y(ShiftIndex(to)) ~ ClockChange(; from, to)(cc.u(ShiftIndex(from))) + O
         # cc.y ~ ClockChange(; from, to)(cc.u) + eps()^10
         # cc.y ~ cc.u
-        connect(ref.output, id.input)
-        connect(id.output, p_controller.reference, ref_diff.input)
+        connect(ref.output, p_controller.reference, ref_diff.input)
         connect(ref_diff.output, add.input1)
         connect(add.output, cc.input)
         connect(cc.output, inner.pi_controller.reference)
@@ -261,11 +221,7 @@ cascade_prob = ODEProblem(ssys, [
     cascade.cc.u(z-1) => 0.0;
     ], (0, 3.0))
 cascade_sol = solve(cascade_prob, Tsit5())
-kw = cascade_prob.kwargs
-cb = kw[1]
 Plots.plot(cascade_sol,
     idxs = [cascade.inner.inertia.phi, cascade.inner.inertia.w],
     layout = 2)
-Plots.plot!(cascade_sol.t, cascade_sol[cascade.sampler.input.u])
-Plots.plot!(cascade_sol.t, cascade_sol[cascade.inner.sampler.input.u], sp=2)
 ```

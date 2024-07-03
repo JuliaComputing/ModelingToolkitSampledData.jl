@@ -1,5 +1,10 @@
 # Discrete block library
 
+## Index
+```@index
+```
+
+## Docstrings
 
 ```@autodocs
 Modules = [ModelingToolkitSampledData]
