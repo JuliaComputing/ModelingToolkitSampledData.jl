@@ -4,7 +4,7 @@ A sampled-data system contains both continuous-time and discrete-time components
 
 !!! danger "Experimental"
     
-    The sampled-data interface is currently experimental and at any time subject to breaking changes **not** respecting semantic versioning.
+    The sampled-data interface in ModelingToolkit is currently experimental and at any time subject to breaking changes **not** respecting semantic versioning.
 
 !!! note "Negative shifts"
     
@@ -111,8 +111,9 @@ eqs = [
 The initial condition of discrete-time variables is defined using the [`ShiftIndex`](@ref) operator, for example
 
 ```julia
-ODEProblem(model, [x(k) => 1.0], (0.0, 10.0))
+ODEProblem(model, [x(k-1) => 1.0], (0.0, 10.0))
 ```
+Note how the initial condition for discrete-time variables refer to the past, and not to the value at ``t=0`` (at `tspan[1]` to be precise). The reason is that in order to perform the discrete-time state update ``x(k) = f(x(k-1), t_0)``, at the initial time ``t_0``, we need ``x(k-1)`` and not ``x(k)``.
 
 If higher-order shifts are present, the corresponding initial conditions must be specified, e.g., the presence of the equation
 
@@ -127,10 +128,10 @@ requires specification of the initial condition for both `x(k-1)` and `x(k-2)`.
 Multi-rate systems are easy to model using multiple different clocks. The following set of equations is valid, and defines *two different discrete-time partitions*, each with its own clock:
 
 ```julia
-yd1 ~ Sample(t, dt1)(y)
-ud1 ~ kp * (Sample(t, dt1)(r) - yd1)
-yd2 ~ Sample(t, dt2)(y)
-ud2 ~ kp * (Sample(t, dt2)(r) - yd2)
+yd1 ~ Sample(dt1)(y)
+ud1 ~ kp * (Sample(dt1)(r) - yd1)
+yd2 ~ Sample(dt2)(y)
+ud2 ~ kp * (Sample(dt2)(r) - yd2)
 ```
 
 `yd1` and `ud1` belong to the same clock which ticks with an interval of `dt1`, while `yd2` and `ud2` belong to a different clock which ticks with an interval of `dt2`. The two clocks are *not synchronized*, i.e., they are not *guaranteed* to tick at the same point in time, even if one tick interval is a rational multiple of the other. Mechanisms for synchronization of clocks are not yet implemented.
@@ -178,11 +179,35 @@ end
 @named c = controller(1)
 @named p = plant()
 
-connections = [r ~ sin(t)          # reference signal
+connections = [r ~ (t >= 5)        # reference signal
                f.u ~ r             # reference to filter input
                f.y ~ c.r           # filtered reference to controller reference
                Hold(c.ud) ~ p.u    # controller output to plant input (zero-order-hold)
                p.y ~ c.y]          # plant output to controller feedback
 
 @named cl = ODESystem(connections, t, systems = [f, c, p])
+cl = complete(cl)
 ```
+
+We can now simulate the system. JuliaSimCompiler is required to simulate hybrid continuous/discrete systems, we thus convert the system to an `JuliaSimCompiler.IRSystem` before calling `structural_simplify`
+```@example clocks
+using JuliaSimCompiler, Plots
+ssys = structural_simplify(IRSystem(cl))
+
+prob = ODEProblem(ssys, [
+    cl.f.x(k-1) => 0,
+], (0,15))
+
+sol = solve(prob, Tsit5())
+plot(sol, idxs=[cl.p.x, cl.c.ud], layout=(2,1))
+```
+
+Not how the initial condition provided above refers to the value of `f.x` at a past time point. If we had not provided this initial condition, we would have gotten an error like this
+```@example clocks
+try
+    ODEProblem(ssys, [], (0,15))
+catch err
+    return err
+end
+```
+The error message indicates that the -1 shift for `f.x` is not provided. The number `0.5` appearing in the error message is the period of the clock associated the variable for which an initial condition is missing `f.x`.
