@@ -1,5 +1,8 @@
 # ModelingToolkitSampledData
 
+> [!TIP]
+>  To be presented at JuliaCon 2024. https://pretalx.com/juliacon2024/talk/KGAKA8/
+
 [![Build Status](https://github.com/JuliaComputing/ModelingToolkitSampledData.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/JuliaComputing/ModelingToolkitSampledData.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
 A standard library with discrete-time components for ModelingToolkit.
