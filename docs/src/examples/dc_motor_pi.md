@@ -212,16 +212,15 @@ end
 @named cascade = Cascade()
 cascade = complete(cascade)
 ssys = structural_simplify(IRSystem(cascade))
+i = cascade.inner
 cascade_prob = ODEProblem(ssys, [
     unknowns(cascade) .=> 0.0;
-    cascade.inner.pi_controller.I(z-1) => 0;
-    cascade.inner.pi_controller.eI(z-1) => 0;
+    i.pi_controller.I(z-1) => 0;
+    i.pi_controller.eI(z-1) => 0;
     cascade.p_controller.I(z-1) => 0;
     cascade.ref_diff.u(z-1) => 0.0;
     cascade.cc.u(z-1) => 0.0;
     ], (0, 3.0))
 cascade_sol = solve(cascade_prob, Tsit5())
-Plots.plot(cascade_sol,
-    idxs = [cascade.inner.inertia.phi, cascade.inner.inertia.w],
-    layout = 2)
+Plots.plot(cascade_sol, idxs = [i.inertia.phi, i.inertia.w, i.zoh.u])
 ```
