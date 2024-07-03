@@ -144,7 +144,7 @@ Discrete-time variables can be accessed with the syntax
 sol[var]
 ```
 
-## Implementing generic discrete components
+## Implementing generic discrete-time components
 Discrete-time components can be implemented without specification of the clock or sample interval. To do this, the operator `SampleTime()` is used, it returns the sample-time interval of the associated clock. See the library of components for usage example, or this simplified example component:
 ```julia
 @mtkmodel DiscreteDerivative begin
@@ -162,6 +162,8 @@ Discrete-time components can be implemented without specification of the clock o
 end
 ```
 In this component, we use two structural parameters, one for the sample time and one for the shift index. By letting the sample time be a structural parameter with a default given by `SampleTime()`, the default behavior is to inherit the sample time based on the connection context (clock partition) of the component. The sample time can still be manually set in case there is no other point at which to infer the sample time, or if the user for some other reason want to override the sample time. The shift index is also a structural parameter with a default. This default leaves the clock unspecified, indicating that the clock should be inherited based on the connection context (clock partition). If the user provides a shift index with a clock specified, other components may inherit their clock from this component. The operator `SampleTime()` will in all cases return the sample time of the associated clock, no matter if this clock is explicitly specified by the user or inherited from the connection context.
+
+In order to make components maximally generic, it is often advisable to avoid including operators like `Sample` and `Hold` at the inputs and outputs of a component, and instead let the user manually insert these operators where required. Larger components that model complete sampled-data systems may of course contain such operators internally. 
 
 
 ## A complete example
