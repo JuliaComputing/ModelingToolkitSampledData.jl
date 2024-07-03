@@ -4,6 +4,19 @@ using ModelingToolkit: t_nounits as t, D_nounits as D
 
 z = ShiftIndex()
 
+
+function get_clock(s)
+    ModelingToolkit.get_gui_metadata(s).type == GlobalRef(@__MODULE__, :Sampler) ||
+        error("clock(sys) is supposed to be called on a ModelingToolkitStandardLibrary.Blocks.Sampler system, got $s")
+    for eq in equations(s)
+        td = ModelingToolkit.get_time_domain(eq.rhs)
+        if td !== nothing #&& td != ModelingToolkit.AbstractClock
+            return td
+        end
+    end
+    error("No clock found")
+end
+
 """
     DiscreteIntegrator(;name, k = 1, x = 0.0, method = :backward)
 
@@ -236,18 +249,6 @@ end
     @equations begin
         y ~ Sample(clock)(u)
     end
-end
-
-function clock(s)
-    ModelingToolkit.get_gui_metadata(s).type == GlobalRef(@__MODULE__, :Sampler) ||
-        error("clock(sys) is supposed to be called on a ModelingToolkitStandardLibrary.Blocks.Sampler system, got $s")
-    for eq in equations(s)
-        td = ModelingToolkit.get_time_domain(eq.rhs)
-        if td !== nothing #&& td != ModelingToolkit.AbstractClock
-            return td
-        end
-    end
-    error("No clock found")
 end
 
 """

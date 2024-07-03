@@ -2,6 +2,7 @@ module ModelingToolkitSampledData
 using ModelingToolkit
 using JuliaSimCompiler
 
+export get_clock
 export DiscreteIntegrator, DiscreteDerivative, Delay, Difference, ZeroOrderHold, Sampler,
        ClockChanger,
        DiscretePIDParallel, DiscretePIDStandard, DiscreteStateSpace,

@@ -92,7 +92,7 @@ so that it can be represented as a system of `ODEs` (ordinary differential equat
 ```@example dc_motor_pi
 sys = structural_simplify(model)
 prob = ODEProblem(sys, unknowns(sys) .=> 0.0, (0, 4.0))
-sol = solve(prob, Rodas4())
+sol = solve(prob, Tsit5())
 
 p1 = Plots.plot(sol.t, sol[inertia.w], ylabel = "Angular Vel. in rad/s",
     label = "Measurement", title = "DC Motor with Speed Controller")
@@ -121,9 +121,9 @@ z = ShiftIndex()
         ground = Ground()
         source = Voltage()
         ref = Blocks.Step(height = 1, start_time = 0, smooth = false)
-        sampler = Blocks.Sampler(dt = 0.005)
-        pi_controller = Blocks.DiscretePIDStandard(
-            K = 1.1, Ti = 0.035, u_max = 10, with_D = false)
+        sampler = Sampler(dt = 0.005)
+        pi_controller = DiscretePIDStandard(
+            K = 1, Ti = 0.035, u_max = 10, with_D = false)
         zoh = ZeroOrderHold()
         R1 = Resistor(R = R)
         L1 = Inductor(L = L)
@@ -179,21 +179,21 @@ In the plot above, we compare the result of the discrete-time control system to 
 @mtkmodel Cascade begin
     @components begin
         inner = DiscreteClosedLoop(use_ref = false)
-        sampler = Sampler(clock = Clock(0.004))
-        cc = ClockChanger(from = Blocks.clock(sampler), to = Blocks.clock(inner.sampler))
-        # cc = Gain(k = 1)
+        sampler = Sampler(clock = Clock(0.005))
+        # cc = ClockChanger(from = get_clock(sampler), to = get_clock(inner.sampler)) # Currently deactivated due to bug
+        cc = Gain(k = 1)
         # cc = SISO()
         ref = Blocks.Ramp(height = 1, start_time = 0.1, duration = 0.9, smooth = false)
-        ref_diff = Blocks.DiscreteDerivative() # This will differentiate q_ref to q̇_ref
+        ref_diff = DiscreteDerivative() # This will differentiate q_ref to q̇_ref
         add = Blocks.Add()      # The middle ∑ block in the diagram
-        p_controller = Blocks.DiscretePIDStandard(K = 20, with_D = false, with_I = false)
+        p_controller = DiscretePIDStandard(K = 20, with_D = false, with_I = false)
     end
     @parameters begin
         O = 0
     end
     begin
-        from = Blocks.clock(sampler)
-        to = Blocks.clock(inner.sampler)
+        from = get_clock(sampler)
+        to = get_clock(inner.sampler)
     end
     @equations begin
         # cc.y(ShiftIndex(to)) ~ ClockChange(; from, to)(cc.u(ShiftIndex(from))) + O
