@@ -168,8 +168,7 @@ A discrete-time noise source that returns a normally-distributed value at each c
         rng = Random.Xoshiro()
     end
     @equations begin
-        y(z) ~ mu + sigma*randn(rng)
-        
+        y(z) ~ mu + sigma*Symbolics.term(randn, rng; type=Real)
     end
 end
 
@@ -206,7 +205,7 @@ A discrete-time noise source that returns a uniformly distributed value at each 
         rng = Random.Xoshiro()
     end
     @equations begin
-        y(z) ~ l + (u-l)*randn(rng)
+        y(z) ~ l + (u-l)*Symbolics.term(randn, rng; type=Real)
     end
 end
 
