@@ -285,9 +285,9 @@ version = "0.2.3"
 
 [[deps.ConcurrentUtilities]]
 deps = ["Serialization", "Sockets"]
-git-tree-sha1 = "6cbbd4d241d7e6579ab354737f4dd95ca43946e1"
+git-tree-sha1 = "ea32b83ca4fefa1768dc84e504cc0a94fb1ab8d1"
 uuid = "f0e56b4a-5159-44fe-b623-3e5288b988bb"
-version = "2.4.1"
+version = "2.4.2"
 
 [[deps.ConstructionBase]]
 deps = ["LinearAlgebra"]
@@ -460,9 +460,9 @@ version = "0.9.3"
 
 [[deps.Documenter]]
 deps = ["ANSIColoredPrinters", "AbstractTrees", "Base64", "CodecZlib", "Dates", "DocStringExtensions", "Downloads", "Git", "IOCapture", "InteractiveUtils", "JSON", "LibGit2", "Logging", "Markdown", "MarkdownAST", "Pkg", "PrecompileTools", "REPL", "RegistryInstances", "SHA", "TOML", "Test", "Unicode"]
-git-tree-sha1 = "5461b2a67beb9089980e2f8f25145186b6d34f91"
+git-tree-sha1 = "76deb8c15f37a3853f13ea2226b8f2577652de05"
 uuid = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
-version = "1.4.1"
+version = "1.5.0"
 
 [[deps.DomainSets]]
 deps = ["CompositeTypes", "IntervalSets", "LinearAlgebra", "Random", "StaticArrays"]
@@ -879,10 +879,10 @@ uuid = "98e50ef6-434e-11e9-1051-2b60c6c9e899"
 version = "1.0.56"
 
 [[deps.JuliaSimBase]]
-deps = ["ModelingToolkit", "OrdinaryDiffEq", "Preferences", "SciMLBase", "UUIDs"]
-git-tree-sha1 = "7ed00b9d40fb0ca43bbac65c69f9a5b8d9a47010"
+deps = ["ModelingToolkit", "OrdinaryDiffEq", "PrecompileTools", "Preferences", "SciMLBase", "UUIDs"]
+git-tree-sha1 = "d97e764a0e7d081d3540c73feceb337b5d2ca635"
 uuid = "9c9cc66b-a38b-4ec4-8b59-87b54775939f"
-version = "1.1.2"
+version = "1.1.3"
 
 [[deps.JuliaSimCompiler]]
 deps = ["AbstractTrees", "ChainRules", "ConstructionBase", "DataStructures", "DiffEqCallbacks", "DocStringExtensions", "Expronicon", "ForwardDiff", "GPUCompiler", "Graphs", "IfElse", "JuliaFormatter", "JuliaSimBase", "JuliaSimCompilerRuntime", "LLVM", "Libdl", "LinearAlgebra", "ModelingToolkit", "NaNMath", "OffsetArrays", "RecursiveArrayTools", "RuntimeGeneratedFunctions", "SciMLBase", "Setfield", "SnoopPrecompile", "SparseArrays", "SparseDiffTools", "SpecialFunctions", "StaticArrays", "StrideArraysCore", "SymbolicIndexingInterface", "SymbolicUtils", "Symbolics", "UnPack"]
@@ -1257,7 +1257,7 @@ uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[deps.ModelingToolkit]]
 deps = ["AbstractTrees", "ArrayInterface", "Combinatorics", "Compat", "ConstructionBase", "DataStructures", "DiffEqBase", "DiffEqCallbacks", "DiffRules", "Distributed", "Distributions", "DocStringExtensions", "DomainSets", "DynamicQuantities", "ExprTools", "Expronicon", "FindFirstFunctions", "ForwardDiff", "FunctionWrappersWrappers", "Graphs", "InteractiveUtils", "JuliaFormatter", "JumpProcesses", "LabelledArrays", "Latexify", "Libdl", "LinearAlgebra", "MLStyle", "NaNMath", "NonlinearSolve", "OrderedCollections", "PrecompileTools", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLBase", "SciMLStructures", "Serialization", "Setfield", "SimpleNonlinearSolve", "SparseArrays", "SpecialFunctions", "StaticArrays", "SymbolicIndexingInterface", "SymbolicUtils", "Symbolics", "URIs", "UnPack", "Unitful"]
-git-tree-sha1 = "80132ca043bb8ea6bfefccaad824ebe76233f28a"
+git-tree-sha1 = "ffd32adc46db2ca97d70cf65e252a91cdc6ef90c"
 repo-rev = "as/discrete-save"
 repo-url = "https://github.com/AayushSabharwal/ModelingToolkit.jl"
 uuid = "961ee093-0014-501f-94e3-6117800e7a78"
@@ -1407,10 +1407,10 @@ uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 version = "1.6.3"
 
 [[deps.OrdinaryDiffEq]]
-deps = ["ADTypes", "Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "EnumX", "ExponentialUtilities", "FastBroadcast", "FastClosures", "FillArrays", "FiniteDiff", "ForwardDiff", "FunctionWrappersWrappers", "IfElse", "InteractiveUtils", "LineSearches", "LinearAlgebra", "LinearSolve", "Logging", "MacroTools", "MuladdMacro", "NonlinearSolve", "Polyester", "PreallocationTools", "PrecompileTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLOperators", "SciMLStructures", "SimpleNonlinearSolve", "SimpleUnPack", "SparseArrays", "SparseDiffTools", "StaticArrayInterface", "StaticArrays", "TruncatedStacktraces"]
-git-tree-sha1 = "b4cde20f0e8c67fd35863794d5e548722f7bb71d"
+deps = ["ADTypes", "Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "EnumX", "ExponentialUtilities", "FastBroadcast", "FastClosures", "FillArrays", "FiniteDiff", "ForwardDiff", "FunctionWrappersWrappers", "IfElse", "InteractiveUtils", "LineSearches", "LinearAlgebra", "LinearSolve", "Logging", "MacroTools", "MuladdMacro", "NonlinearSolve", "Polyester", "PreallocationTools", "PrecompileTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLOperators", "SciMLStructures", "SimpleNonlinearSolve", "SimpleUnPack", "SparseArrays", "SparseDiffTools", "Static", "StaticArrayInterface", "StaticArrays", "TruncatedStacktraces"]
+git-tree-sha1 = "6ef13f8b23af28ee2d98226653d8382ab79287ea"
 uuid = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-version = "6.84.0"
+version = "6.85.0"
 
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1674,7 +1674,7 @@ version = "0.6.43"
 
 [[deps.SciMLBase]]
 deps = ["ADTypes", "Accessors", "ArrayInterface", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "Expronicon", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "PrecompileTools", "Preferences", "Printf", "RecipesBase", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLOperators", "SciMLStructures", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables"]
-git-tree-sha1 = "3518291138f54e8f98b98e004c50083c6cdf6d1e"
+git-tree-sha1 = "9e8d082d62fb2656e9de9d7c736de7e54193983f"
 repo-rev = "as/discrete-save"
 repo-url = "https://github.com/AayushSabharwal/SciMLBase.jl"
 uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
@@ -1929,7 +1929,7 @@ version = "7.2.1+1"
 
 [[deps.SymbolicIndexingInterface]]
 deps = ["Accessors", "ArrayInterface", "RuntimeGeneratedFunctions", "StaticArraysCore"]
-git-tree-sha1 = "8451bd443a7f89827fd11c759a574bbd11585b96"
+git-tree-sha1 = "21c81f1d8459641a1a11a0bbc1e4255e6c578317"
 repo-rev = "as/discrete-save"
 repo-url = "https://github.com/SciML/SymbolicIndexingInterface.jl.git"
 uuid = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
@@ -2020,9 +2020,9 @@ uuid = "0796e94c-ce3b-5d07-9a54-7f471281c624"
 version = "0.5.29"
 
 [[deps.TranscodingStreams]]
-git-tree-sha1 = "d73336d81cafdc277ff45558bb7eaa2b04a8e472"
+git-tree-sha1 = "60df3f8126263c0d6b357b9a1017bb94f53e3582"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
-version = "0.10.10"
+version = "0.11.0"
 weakdeps = ["Random", "Test"]
 
     [deps.TranscodingStreams.extensions]
