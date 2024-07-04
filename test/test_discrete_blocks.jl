@@ -302,3 +302,30 @@ using ModelingToolkitStandardLibrary.Blocks
     sol = solve(prob, Tsit5())
     # TODO: add tests
 end
+
+
+# https://github.com/SciML/ModelingToolkit.jl/issues/2843
+# @testset "StateSpace" begin
+#     k = ShiftIndex(Clock(1))
+
+#     @mtkmodel PlantModel begin
+#         @components begin
+#             input = Constant(k=1)
+#             plant = DiscreteStateSpace(z = k, A=[1;;], B=[1;;], C=[1;;], D=[0;;])
+#         end
+#         @variables begin
+#             x(t) # Dummy variable
+#         end
+#         @equations begin
+#             connect(input.output, plant.input)
+#             D(x) = 1
+#         end
+#     end
+
+#     @named m = PlantModel()
+#     m = complete(m)
+#     ssys = structural_simplify(IRSystem(m))
+#     prob = ODEProblem(ssys, Dict(m.plant.u(k - 1) => 0), (0.0, 10.0))
+#     sol = solve(prob, Tsit5(), dtmax = 0.01)
+#     @test reduce(vcat, sol((0:10) .+ 1e-2))[:]≈[zeros(2); 1; zeros(8)] atol=1e-2
+# end

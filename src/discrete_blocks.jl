@@ -20,12 +20,12 @@ end
 """
     DiscreteIntegrator(;name, k = 1, x = 0.0, method = :backward)
 
-Outputs `y = ∫k*u dt`, corresponding to the discrete-time transfer function
+Outputs `y = ∫k*u dt`, discretized to correspond to the one of the discrete-time transfer functions
 - `method = :forward`: ``T_s / (z - 1)``
 - `method = :backward`: ``T_s z / (z - 1)``
 - `method = :trapezoidal`: ``(T_s / 2) (z + 1) / (z - 1)``
 
-where `T_s` is the sample time of the integrator.
+where ``T_s`` is the sample time of the integrator.
 
 Initial value of integrator state ``x`` can be set with `x`
 
@@ -69,7 +69,7 @@ end
 A discrete-time derivative filter, corresponding to the transfer function
 ``k (z-1) / (T_s z)``
 
-where `T_s` is the sample time of the derivative filter.
+where ``T_s`` is the sample time of the derivative filter.
 
 # Connectors:
 - `input`
@@ -672,3 +672,124 @@ See also [ControlSystemsMTK.jl](https://juliacontrol.github.io/ControlSystemsMTK
 # DiscreteTransferFunction(b, a; kwargs...) = DiscreteTransferFunction(; b, a, kwargs...)
 
 ##
+
+
+
+# https://github.com/SciML/ModelingToolkit.jl/issues/2843
+# @component function DiscreteStateSpace(; A, B, C, D = nothing, x = zeros(size(A, 1)), name,
+#         u0 = zeros(size(B, 2)), y0 = zeros(size(C, 1)), z = z)
+#     nx, nu, ny = size(A, 1), size(B, 2), size(C, 1)
+#     size(A, 2) == nx || error("`A` has to be a square matrix.")
+#     size(B, 1) == nx || error("`B` has to be of dimension ($nx x $nu).")
+#     size(C, 2) == nx || error("`C` has to be of dimension ($ny x $nx).")
+#     if B isa AbstractVector
+#         B = reshape(B, length(B), 1)
+#     end
+#     if isnothing(D) || iszero(D)
+#         D = zeros(ny, nu)
+#     else
+#         size(D) == (ny, nu) || error("`D` has to be of dimension ($ny x $nu).")
+#     end
+#     @named input = RealInput(nin = nu)
+#     @named output = RealOutput(nout = ny)
+#     @variables x(t)[1:nx]=x [
+#         description = "State variables"
+#     ]
+#     x = collect(x)
+#     # pars = @parameters A=A B=B C=C D=D # This is buggy
+#     eqs = [ 
+#         [x[i](z) ~ sum(A[i, k] * x[k](z-1) for k in 1:nx) +
+#                                  sum(B[i, j] * (input.u[j](z-1) - u0[j]) for j in 1:nu)
+#          for i in 1:nx]; # cannot use D here
+#         [output.u[j] ~ sum(C[j, i] * x[i] for i in 1:nx) +
+#                        sum(D[j, k] * (input.u[k] - u0[k]) for k in 1:nu) + y0[j]
+#          for j in 1:ny];
+#     ]
+#     @show eqs
+#     compose(ODESystem(eqs, t, name = name), [input, output])
+# end
+
+# DiscreteStateSpace(A, B, C, D = nothing; kwargs...) = DiscreteStateSpace(; A, B, C, D, kwargs...)
+
+# symbolic_eps(t) = eps(t)
+# @register_symbolic symbolic_eps(t)
+
+# """
+#     TransferFunction(; b, a, name)
+
+# A single input, single output, linear time-invariant system provided as a transfer-function.
+# ```
+# Y(s) = b(s) / a(s)  U(s)
+# ```
+# where `b` and `a` are vectors of coefficients of the numerator and denominator polynomials, respectively, ordered such that the coefficient of the highest power of `s` is first.
+
+# The internal state realization is on controller canonical form, with state variable `x`, output variable `y` and input variable `u`. For numerical robustness, the realization used by the integrator is scaled by the last entry of the `a` parameter. The internally scaled state variable is available as `x_scaled`.
+
+# To set the initial state, it's recommended to set the initial condition for `x`, and let that of `x_scaled` be computed automatically.
+
+# # Parameters:
+# - `b`: Numerator polynomial coefficients, e.g., `2s + 3` is specified as `[2, 3]`
+# - `a`: Denominator polynomial coefficients, e.g., `s² + 2ωs + ω^2` is specified as `[1, 2ω, ω^2]`
+
+# # Connectors:
+#   - `input`
+#   - `output`
+
+# See also [`StateSpace`](@ref) which handles MIMO systems, as well as [ControlSystemsMTK.jl](https://juliacontrol.github.io/ControlSystemsMTK.jl/stable/) for an interface between [ControlSystems.jl](https://juliacontrol.github.io/ControlSystems.jl/stable/) and ModelingToolkit.jl for advanced manipulation of transfer functions and linear statespace systems. For linearization, see [`linearize`](@ref) and [Linear Analysis](https://docs.sciml.ai/ModelingToolkitStandardLibrary/stable/API/linear_analysis/).
+# """
+# @component function DiscreteTransferFunction(; b = [1], a = [1, 1], name, z=z)
+#     nb = length(b)
+#     na = length(a)
+#     nb <= na ||
+#         error("Transfer function is not proper, the numerator must not be longer than the denominator")
+#     nx = na - 1
+#     nbb = max(0, na - nb)
+
+#     @named begin
+#         input = RealInput()
+#         output = RealOutput()
+#     end
+
+#     @parameters begin
+#         b[1:nb] = b,
+#         [
+#             description = "Numerator coefficients of transfer function (e.g., 2s + 3 is specified as [2,3])"
+#         ]
+#         a[1:na] = a,
+#         [
+#             description = "Denominator coefficients of transfer function (e.g., `s² + 2ωs + ω^2` is specified as [1, 2ω, ω^2])"
+#         ]
+#         bb[1:(nbb + nb)] = [zeros(nbb); b]
+#         d = bb[1] / a[1], [description = "Direct feedthrough gain"]
+#     end
+
+#     a = collect(a)
+#     @parameters a_end = ifelse(a[end] > 100 * symbolic_eps(sqrt(a' * a)), a[end], 1.0)
+
+#     pars = [collect(b); a; collect(bb); d; a_end]
+#     @variables begin
+#         x(t)[1:nx] = zeros(nx),
+#         [description = "State of transfer function on controller canonical form"]
+#         x_scaled(t)[1:nx] = collect(x) * a_end, [description = "Scaled vector x"]
+#         u(t), [description = "Input flowing through connector `input`"]
+#         y(t), [description = "Output flowing through connector `output`"]
+#     end
+
+#     x = collect(x)
+#     x_scaled = collect(x_scaled)
+#     bb = collect(bb)
+
+#     sts = [x; x_scaled; y; u]
+
+#     if nx == 0
+#         eqs = [y ~ d * u]
+#     else
+#         eqs = Equation[x_scaled[1](z) ~ (-a[2:na]'x_scaled(z-1) + a_end * u) / a[1]
+#                        [x_scaled[i](z) .~ x_scaled[j](z-1) for (i,j) in zip(2:nx, 1:(nx - 1))]
+#                        y ~ ((bb[2:na] - d * a[2:na])'x_scaled) / a_end + d * u
+#                        x .~ x_scaled ./ a_end]
+#     end
+#     push!(eqs, input.u ~ u)
+#     push!(eqs, output.u ~ y)
+#     compose(ODESystem(eqs, t, sts, pars; name = name), input, output)
+# end
