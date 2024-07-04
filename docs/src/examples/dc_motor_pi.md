@@ -45,7 +45,7 @@ The actual model can now be composed.
 @named emf = EMF(k = k)
 @named fixed = Fixed()
 @named load = Torque()
-@named load_step = Blocks.Step(height = tau_L_step, start_time = 2)
+@named load_step = Blocks.Step(height = tau_L_step, start_time = 1.3)
 @named inertia = Inertia(J = J)
 @named friction = Damper(d = f)
 @named speed_sensor = SpeedSensor()
@@ -91,7 +91,7 @@ so that it can be represented as a system of `ODEs` (ordinary differential equat
 
 ```@example dc_motor_pi
 sys = structural_simplify(model)
-prob = ODEProblem(sys, unknowns(sys) .=> 0.0, (0, 4.0))
+prob = ODEProblem(sys, unknowns(sys) .=> 0.0, (0, 2.0))
 sol = solve(prob, Tsit5())
 
 p1 = Plots.plot(sol.t, sol[inertia.w], ylabel = "Angular Vel. in rad/s",
@@ -130,7 +130,7 @@ z = ShiftIndex()
         emf = EMF(k = k)
         fixed = Fixed()
         load = Torque()
-        load_step = Blocks.Step(height = tau_L_step, start_time = 2)
+        load_step = Blocks.Step(height = tau_L_step, start_time = 1.3)
         inertia = Inertia(J = J)
         friction = Damper(d = f)
         speed_sensor = SpeedSensor()
@@ -161,19 +161,21 @@ end
 disc_model = complete(disc_model)
 ssys = structural_simplify(IRSystem(disc_model)) # Conversion to an IRSystem from JuliaSimCompiler is required for sampled-data systems
 
-disc_prob = ODEProblem(ssys, [unknowns(disc_model) .=> 0.0; disc_model.pi_controller.I(z-1) => 0; disc_model.pi_controller.eI(z-1) => 0], (0, 4.0))
+disc_prob = ODEProblem(ssys, [unknowns(disc_model) .=> 0.0; disc_model.pi_controller.I(z-1) => 0; disc_model.pi_controller.eI(z-1) => 0], (0, 2.0))
 disc_sol = solve(disc_prob, Tsit5())
 
 Plots.plot(sol.t, sol[inertia.w], ylabel = "Angular Vel. in rad/s",
     label = "Measurement (cont. controller)", title = "DC Motor with Speed Controller")
 Plots.plot!(disc_sol.t, disc_sol[inertia.w], ylabel = "Angular Vel. in rad/s",
     label = "Measurement (disc. controller)", title = "DC Motor with Discrete-time Speed Controller", legend=:bottomleft, dpi=600)
-lens!([1.9, 2.3], [0.75, 1.02], inset=(1, bbox(.6, .5, .3, .4))) # 1 is subplot index
+lens!([1.2, 1.6], [0.75, 1.02], inset=(1, bbox(.6, .5, .3, .4))) # 1 is subplot index
 ```
 
 In the plot above, we compare the result of the discrete-time control system to the continuous-time result from before. We see that with the chosen sample-interval of `dt=0.005` (provided to the `Sampler` block), we have a slight degradation in the control performance as a consequence of the discretization.
 
 ### Adding a slower outer position loop
+
+![block diagram of a cascade control loop](https://help.juliahub.com/juliasimcontrol/dev/figs/cascade_pid.png)
 
 ```@example dc_motor_pi
 @mtkmodel Cascade begin
@@ -183,7 +185,7 @@ In the plot above, we compare the result of the discrete-time control system to 
         # cc = ClockChanger(from = get_clock(sampler), to = get_clock(inner.sampler)) # Currently deactivated due to bug
         cc = Gain(k = 1)
         # cc = SISO()
-        ref = Blocks.Ramp(height = 1, start_time = 0.1, duration = 0.9, smooth = false)
+        ref = Blocks.Ramp(height = 1, start_time = 0.05, duration = 0.85, smooth = false)
         ref_diff = DiscreteDerivative() # This will differentiate q_ref to q̇_ref
         add = Blocks.Add()      # The middle ∑ block in the diagram
         p_controller = DiscretePIDStandard(K = 20, with_D = false, with_I = false)
@@ -220,7 +222,7 @@ cascade_prob = ODEProblem(ssys, [
     cascade.p_controller.I(z-1) => 0;
     cascade.ref_diff.u(z-1) => 0.0;
     cascade.cc.u(z-1) => 0.0;
-    ], (0, 3.0))
+    ], (0, 2))
 cascade_sol = solve(cascade_prob, Tsit5())
 Plots.plot(cascade_sol, idxs = [i.inertia.phi, i.inertia.w, i.zoh.u])
 ```

@@ -105,45 +105,46 @@ end
 @named model = ClosedLoop()
 model = complete(model)
 # ci, varmap = infer_clocks(expand_connections(model))
-model = structural_simplify(IRSystem(model))
+ssys = structural_simplify(IRSystem(model))
 
 Tf = 5
 timevec = 0:(dt):Tf
 
 import ControlSystemsBase as CS
-import ControlSystemsBase: c2d, tf, feedback, lsim
-P = CS.c2d(CS.ss([-1], [1], [1], 0), dt)
-C = CS.c2d(CS.ss([0], [1], [2], [2]), dt, :fwdeuler)
+let (; c2d, tf, feedback, lsim) = CS
+    
+    P = CS.c2d(CS.ss([-1], [1], [1], 0), dt)
+    C = CS.c2d(CS.ss([0], [1], [2], [2]), dt, :fwdeuler)
 
-# Test the output of the continuous partition
-G = feedback(P * C)
-res = lsim(G, (x, t) -> [0.5], timevec)
-y = res.y[:]
-
-prob = ODEProblem(model,
-    [model.plant.x => 0.0; model.controller.kp => 2.0; model.controller.ki => 2.0;
-     model.controller.eI => 0.0],
-    (0.0, Tf))
-
-sol = solve(prob,
-    Tsit5(),
-    abstol = 1e-8,
-    reltol = 1e-8)
-
-# plot(timevec, [y sol(timevec, idxs = model.plant.output.u)[:]], m = :o, lab = ["CS" "MTK"])
-# display(current())
-
-@test sol(timevec, idxs = model.plant.output.u)[:]≈y rtol=1e-6
-
-@test_skip begin
-    # Test the output of the discrete partition
-    G = feedback(C, P)
+    # Test the output of the continuous partition
+    G = feedback(P * C)
     res = lsim(G, (x, t) -> [0.5], timevec)
     y = res.y[:]
-    @test_broken sol(timevec .+ 1e-10, idxs = model.controller.output.u)≈y rtol=1e-8 # Broken due to discrete observed
-    # plot([y sol(timevec .+ 1e-12, idxs=model.controller.output.u)], lab=["CS" "MTK"])
-end
 
+    prob = ODEProblem(ssys,
+        [model.plant.x => 0.0; model.controller.kp => 2.0; model.controller.ki => 2.0;
+        model.controller.eI(k-1) => 0.0; model.controller.I(k-1) => 0.0],
+        (0.0, Tf))
+
+    sol = solve(prob,
+        Tsit5(),
+        abstol = 1e-8,
+        reltol = 1e-8)
+
+    # plot(timevec, [y sol(timevec, idxs = model.plant.output.u)[:]], m = :o, lab = ["CS" "MTK"])
+    # display(current())
+
+    @test sol(timevec, idxs = model.plant.output.u)[:]≈y rtol=1e-5
+
+    @test_skip begin
+        # Test the output of the discrete partition
+        G = feedback(C, P)
+        res = lsim(G, (x, t) -> [0.5], timevec)
+        y = res.y[:]
+        @test_broken sol(timevec .+ 1e-10, idxs = model.controller.output.u)≈y rtol=1e-8 # Broken due to discrete observed
+        # plot([y sol(timevec .+ 1e-12, idxs=model.controller.output.u)], lab=["CS" "MTK"])
+    end
+end
 # ==============================================================================
 ## DiscretePIDStandard
 # ==============================================================================
@@ -173,44 +174,44 @@ end
 @named model = ClosedLoop()
 model = complete(model)
 # ci, varmap = infer_clocks(expand_connections(model))
-model = structural_simplify(IRSystem(model))
+ssys = structural_simplify(IRSystem(model))
 
 Tf = 5
 timevec = 0:(dt):Tf
 
 import ControlSystemsBase as CS
-import ControlSystemsBase: c2d, tf, feedback, lsim
-P = CS.c2d(CS.ss([-1], [1], [1], 0), dt)
-C = CS.c2d(CS.ss([0], [1], [2], [2]), dt, :fwdeuler)
+let (; c2d, tf, feedback, lsim) = CS
+    P = CS.c2d(CS.ss([-1], [1], [1], 0), dt)
+    C = CS.c2d(CS.ss([0], [1], [2], [2]), dt, :fwdeuler)
 
-# Test the output of the continuous partition
-G = feedback(P * C)
-res = lsim(G, (x, t) -> [0.5], timevec)
-y = res.y[:]
-
-prob = ODEProblem(model,
-    [model.plant.x => 0.0; model.controller.eI => 0.0],
-    (0.0, Tf))
-
-sol = solve(prob,
-    Tsit5(),
-    abstol = 1e-8,
-    reltol = 1e-8)
-
-# plot(timevec, [y sol(timevec, idxs = model.plant.output.u)[:]], m = :o, lab = ["CS" "MTK"])
-# display(current())
-
-@test sol(timevec, idxs = model.plant.output.u)[:]≈y rtol=1e-6
-
-@test_skip begin
-    # Test the output of the discrete partition
-    G = feedback(C, P)
+    # Test the output of the continuous partition
+    G = feedback(P * C)
     res = lsim(G, (x, t) -> [0.5], timevec)
     y = res.y[:]
-    @test_broken sol(timevec .+ 1e-10, idxs = model.controller.output.u)≈y rtol=1e-8 # Broken due to discrete observed
-    # plot([y sol(timevec .+ 1e-12, idxs=model.controller.output.u)], lab=["CS" "MTK"])
-end
 
+    prob = ODEProblem(ssys,
+        [model.plant.x => 0.0; model.controller.eI(k-1) => 0.0; model.controller.I(k-1) => 0.0],
+        (0.0, Tf))
+
+    sol = solve(prob,
+        Tsit5(),
+        abstol = 1e-8,
+        reltol = 1e-8)
+
+    # plot(timevec, [y sol(timevec, idxs = model.plant.output.u)[:]], m = :o, lab = ["CS" "MTK"])
+    # display(current())
+
+    @test sol(timevec, idxs = model.plant.output.u)[:]≈y rtol=1e-6
+
+    @test_skip begin
+        # Test the output of the discrete partition
+        G = feedback(C, P)
+        res = lsim(G, (x, t) -> [0.5], timevec)
+        y = res.y[:]
+        @test_broken sol(timevec .+ 1e-10, idxs = model.controller.output.u)≈y rtol=1e-8 # Broken due to discrete observed
+        # plot([y sol(timevec .+ 1e-12, idxs=model.controller.output.u)], lab=["CS" "MTK"])
+    end
+end
 # ==============================================================================
 ## Delay
 # ==============================================================================

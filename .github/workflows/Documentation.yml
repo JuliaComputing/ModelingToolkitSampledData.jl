@@ -32,7 +32,7 @@ jobs:
         run: DISPLAY=:0 xvfb-run -s '-screen 0 1024x768x24' julia --project=docs -e 'using Pkg;
                                       ENV["DISPLAY"] = "0";
                                       Pkg.setprotocol!(; domain = "github.com", protocol = "ssh"); 
-                                      Pkg.add(PackageSpec(name = "JuliaSimCompiler", url = "https://github.com/JuliaComputing/JuliaSimCompiler.jl", rev = "master"));
+                                      #Pkg.add(PackageSpec(name = "JuliaSimCompiler", url = "https://github.com/JuliaComputing/JuliaSimCompiler.jl", rev = "master"));
                                       Pkg.develop(PackageSpec(path=pwd()));
                                       Pkg.instantiate()'
       - name: Build and deploy
