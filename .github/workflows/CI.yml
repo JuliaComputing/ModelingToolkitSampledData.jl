@@ -13,14 +13,14 @@ env:
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     strategy:
       fail-fast: false
       matrix:
         version:
           - '1'
         os:
-          - ubuntu-latest
+          - self-hosted
         arch:
           - x64
     steps:
@@ -31,6 +31,9 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
+      - uses: webfactory/ssh-agent@v0.8.0 
+        with: 
+          ssh-private-key: ${{ secrets.JULIASIM_REGISTRY_SSH_KEY }}
       - uses: PumasAI/add-private-registry@main
         with:
           juliahub_token_encoded: ${{ secrets.JULIAHUB_TOKEN_ENCODED }}
@@ -38,3 +41,8 @@ jobs:
           private_registry_uuid: 309a7822-a73e-4490-9504-7d1983f27685
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
+      - uses: julia-actions/julia-processcoverage@v1
+      - uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+        if: matrix.os == 'ubuntu-latest' && matrix.arch == 'x64'
