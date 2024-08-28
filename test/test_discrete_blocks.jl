@@ -297,9 +297,11 @@ using ModelingToolkitStandardLibrary.Blocks
 
     @named m = NoiseModel()
     m = complete(m)
-    ssys = structural_simplify(IRSystem(m))
-    prob = ODEProblem(ssys, [], (0.0, 10.0))
-    sol = solve(prob, Tsit5())
+    @test_skip begin # https://github.com/JuliaComputing/JuliaSimCompiler.jl/issues/397
+        ssys = structural_simplify(IRSystem(m))
+        prob = ODEProblem(ssys, [], (0.0, 10.0))
+        sol = solve(prob, Tsit5())
+    end
     # TODO: add tests
 end
 
