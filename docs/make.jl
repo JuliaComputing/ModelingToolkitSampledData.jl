@@ -1,5 +1,7 @@
 using ModelingToolkitSampledData
 using Documenter
+using Plots
+gr(fmt=:png)
 
 ENV["JULIA_DEBUG"]=Documenter # Enable this for debugging
 ENV["DOCS_BUILD"] = true # used to lower the default frame rate in animations for the docs
