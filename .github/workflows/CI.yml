@@ -31,11 +31,6 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: PumasAI/add-private-registry@main
-        with:
-          juliahub_token_encoded: ${{ secrets.JULIAHUB_TOKEN_ENCODED }}
-          private_registry_name: JuliaSimRegistry
-          private_registry_uuid: 309a7822-a73e-4490-9504-7d1983f27685
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
