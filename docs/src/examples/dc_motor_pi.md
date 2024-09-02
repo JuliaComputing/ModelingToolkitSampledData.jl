@@ -174,6 +174,7 @@ lens!([1.2, 1.6], [0.75, 1.02], inset=(1, bbox(.6, .5, .3, .4))) # 1 is subplot 
 In the plot above, we compare the result of the discrete-time control system to the continuous-time result from before. We see that with the chosen sample-interval of `dt=0.005` (provided to the `Sampler` block), we have a slight degradation in the control performance as a consequence of the discretization.
 
 ### Adding a slower outer position loop
+Below, we add an outer control loop that controls the position of the motor by manipulating the reference to the inner speed controller. This is a common control strategy, often referred to as _cascade control_.
 
 ![block diagram of a cascade control loop](https://help.juliahub.com/juliasimcontrol/dev/figs/cascade_pid.png)
 
@@ -184,7 +185,6 @@ In the plot above, we compare the result of the discrete-time control system to 
         sampler = Sampler(clock = Clock(0.005))
         # cc = ClockChanger(from = get_clock(sampler), to = get_clock(inner.sampler)) # Currently deactivated due to bug
         cc = Gain(k = 1)
-        # cc = SISO()
         ref = Blocks.Ramp(height = 1, start_time = 0.05, duration = 0.85, smooth = false)
         ref_diff = DiscreteDerivative() # This will differentiate q_ref to q̇_ref
         add = Blocks.Add()      # The middle ∑ block in the diagram

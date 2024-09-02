@@ -257,10 +257,14 @@ end
 # Connectors:
 - `input` (continuous-time signal)
 - `output` (discrete-time signal)
+
+!!! danger "Experimental"
+    The ClockChanger component is experimental and has known correctness issues. Please use with caution.
 """
 @mtkmodel ClockChanger begin
     begin
         isdefined(Main, :JuliaSimCompiler) || error("JuliaSimCompiler must be defined in the Main module for the ClockChanger component to work. Run `import JuliaSimCompiler`.")
+        @warn "The ClockChanger component is experimental and has known correctness issues. Please use with caution."
     end
     @extend u, y = siso = SISO()
     @structural_parameters begin
