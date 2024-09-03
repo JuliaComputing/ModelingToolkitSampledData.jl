@@ -360,3 +360,42 @@ end
 #     @test reduce(vcat, sol((0:10) .+ 1e-2))[:]≈[zeros(2); 1; zeros(8)] atol=1e-2
 # end*
 
+
+@testset "quantization" begin
+    @info "Testing quantization"
+
+    function test_quant(y_min, y_max, bits)
+        u = y_min:(1/2^bits):y_max
+        y = ModelingToolkitSampledData.quantize.(u, bits, y_min, y_max)
+        uy = unique(y)
+        @test uy ≈ range(y_min, stop=y_max, length=2^bits)
+    end
+
+    test_quant(-1, 1, 2) # Symmetric
+    test_quant(-1, 2, 2) # Not symmetric
+    test_quant(-1, 1, 3) # Symmetric, uneven number of bits
+    test_quant(-5, -2, 2) # Only negative
+    test_quant(5, 12, 2) # Only positive
+    test_quant(-5, 12, 20) # Large number of bits
+
+    z = ShiftIndex(Clock(0.1))
+    @mtkmodel QuantizationModel begin
+        @components begin
+            input = Sine(amplitude=1, frequency=1)
+            quant = Quantization(; z, bits=2)
+        end
+        @equations begin
+            connect(input.output, quant.input)
+        end
+    end
+    @named m = QuantizationModel()
+    m = complete(m)
+    ssys = structural_simplify(IRSystem(m))
+    prob = ODEProblem(ssys, [], (0.0, 10.0))
+    sol = solve(prob, Tsit5(), dtmax=0.01)
+    y = sol[m.quant.y]
+    uy = unique(y)
+    @test length(uy) == 4
+end
+
+

@@ -877,3 +877,51 @@ See also [ControlSystemsMTK.jl](https://juliacontrol.github.io/ControlSystemsMTK
 #     push!(eqs, output.u ~ y)
 #     compose(ODESystem(eqs, t, sts, pars; name = name), input, output)
 # end
+
+"""
+    Quantization
+
+A quantization block that quantizes the input signal to a specified number of bits.
+
+# Parameters:
+- `y_max`: Upper limit of output
+- `y_min`: Lower limit of output
+- `bits`: Number of bits of quantization
+- `quantized`: If quantization effects shall be computed. If false, the output is equal to the input, which may be useful for, e.g., linearization.
+
+# Connectors:
+- `input`
+- `output`
+
+# Variables
+- `y`: Output signal, equal to `output.u`
+- `u`: Input signal, equal to `input.u`
+"""
+@mtkmodel Quantization begin
+    @extend u, y = siso = SISO()
+    @structural_parameters begin
+        z = ShiftIndex()
+    end
+    @parameters begin
+        y_max = 1, [description = "Upper limit of output"]
+        y_min = -1, [description = "Lower limit of output"]
+        bits::Int = 8, [description = "Number of bits of quantization"]
+        quantized::Bool = true, [description = "If quantization effects shall be computed."]
+    end
+    begin
+    end
+    @equations begin
+        y(z) ~ ifelse(quantized == true, quantize(u(z), bits, y_min, y_max), u(z))
+    end
+end
+
+function quantize(u, bits, y_min, y_max)
+    d = y_max - y_min
+    y1 = clamp(u, y_min, y_max)
+    y2 = (y1 - y_min) / d # between 0 and 1
+    levels = 2^Int(bits)-1
+    y3 = round(y2 * levels) / levels # quantized between 0 and 1
+    y4 = y3*d + y_min
+    return y4
+end
+@register_symbolic quantize(u, bits, y_min, y_max)
