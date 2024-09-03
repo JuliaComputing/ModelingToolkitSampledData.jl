@@ -14,17 +14,22 @@ A sampled-data system contains both continuous-time and discrete-time components
 ## Clocks, operators and difference equations
 A clock can be seen as an *event source*, i.e., when the clock ticks, an event is generated. In response to the event the discrete-time logic is executed, for example, a control signal is computed. For basic modeling of sampled-data systems, the user does not have to interact with clocks explicitly, instead, the modeling is performed using the operators
 
-  - [`Sample`](@ref)
-  - [`Hold`](@ref)
-  - [`ShiftIndex`](@ref)
+- [`ModelingToolkit.Sample`](@ref)
+- [`ModelingToolkit.Hold`](@ref)
+- [`ModelingToolkit.ShiftIndex`](@ref)
+
+  or their corresponding components
+
+- [`ModelingToolkitSampledData.Sampler`](@ref)
+- [`ModelingToolkitSampledData.ZeroOrderHold`](@ref)
 
 When a continuous-time variable `x` is sampled using `xd = Sample(x, dt)`, the result is a discrete-time variable `xd` that is defined and updated whenever the clock ticks. `xd` is *only defined when the clock ticks*, which it does with an interval of `dt`. If `dt` is unspecified, the tick rate of the clock associated with `xd` is inferred from the context in which `xd` appears. Any variable taking part in the same equation as `xd` is inferred to belong to the same *discrete partition* as `xd`, i.e., belonging to the same clock. A system may contain multiple different discrete-time partitions, each with a unique clock. This allows for modeling of multi-rate systems and discrete-time processes located on different computers etc.
 
-To make a discrete-time variable available to the continuous partition, the [`Hold`](@ref) operator is used. `xc = Hold(xd)` creates a continuous-time variable `xc` that is updated whenever the clock associated with `xd` ticks, and holds its value constant between ticks.
+To make a discrete-time variable available to the continuous partition, the `Hold` operator is used. `xc = Hold(xd)` creates a continuous-time variable `xc` that is updated whenever the clock associated with `xd` ticks, and holds its value constant between ticks.
 
-The operators [`Sample`](@ref) and [`Hold`](@ref) are thus providing the interface between continuous and discrete partitions.
+The operators `Sample` and `Hold` are thus providing the interface between continuous and discrete partitions.
 
-The [`ShiftIndex`](@ref) operator is used to refer to past and future values of discrete-time variables. The example below illustrates its use, implementing the discrete-time system
+The `ShiftIndex` operator is used to refer to past and future values of discrete-time variables. The example below illustrates its use, implementing the discrete-time system
 
 ```math
 x(k+1) = 0.5x(k) + u(k)
@@ -48,7 +53,7 @@ eqs = [
 A few things to note in this basic example:
 
   - The equation `x(k+1) = 0.5x(k) + u(k)` has been rewritten in terms of negative shifts since positive shifts are not yet supported.
-  - `x` and `u` are automatically inferred to be discrete-time variables, since they appear in an equation with a discrete-time [`ShiftIndex`](@ref) `k`.
+  - `x` and `u` are automatically inferred to be discrete-time variables, since they appear in an equation with a discrete-time `ShiftIndex` `k`.
   - `y` is also automatically inferred to be a discrete-time-time variable, since it appears in an equation with another discrete-time variable `x`. `x,u,y` all belong to the same discrete-time partition, i.e., they are all updated at the same *instantaneous point in time* at which the clock ticks.
   - The equation `y ~ x` does not use any shift index, this is equivalent to `y(k) ~ x(k)`, i.e., discrete-time variables without shift index are assumed to refer to the variable at the current time step.
   - The equation `x(k) ~ 0.5x(k-1) + u(k-1)` indicates how `x` is updated, i.e., what the value of `x` will be at the *current* time step in terms of the *past* value. The output `y`, is given by the value of `x` at the *current* time step, i.e., `y(k) ~ x(k)`. If this logic was implemented in an imperative programming style, the logic would thus be
@@ -106,11 +111,10 @@ eqs = [
 ]
 ```
 
-(see also [ModelingToolkitStandardLibrary](https://docs.sciml.ai/ModelingToolkitStandardLibrary/stable/) for a discrete-time transfer-function component.)
 
 ## Initial conditions
 
-The initial condition of discrete-time variables is defined using the [`ShiftIndex`](@ref) operator, for example
+The initial condition of discrete-time variables is defined using the `ShiftIndex` operator, for example
 
 ```julia
 ODEProblem(model, [x(k-1) => 1.0], (0.0, 10.0))
