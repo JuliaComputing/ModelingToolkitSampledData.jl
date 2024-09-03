@@ -83,28 +83,6 @@ figu = plot(noise_sol, idxs=noisy_model.source.V.u, label = "Control signal [V]"
 plot(figy, figu, plot_title = "DC Motor with Discrete-time Speed Controller")
 ```
 
-## Linear analysis of noise
-Propagation of Gaussian noise through linear time-invariant systems is well understood, the stationary covariance of the output can be computed by solving a Lyapunov equation. Unfortunately, ModelingToolkit models that contain both continuous time and discrete time components cannot yet be linearized and linear analysis is thus made slightly harder. Below, we instead use a data-driven linearization approach where we use recorded signals from the simulation and fit a linear model using subspace-based identification. The function `subspaceid` below is provided by the package [ControlSystemIdentification.jl](https://baggepinnen.github.io/ControlSystemIdentification.jl/stable/).
-
-We let the angular velocity of the inertia be the output, and the output of the noise block as well as the output of the load disturbance be the inputs. 
-
-```@example NOISE
-using ControlSystemIdentification, ControlSystemsBase
-Tf = 20
-prob2 = remake(noise_prob, p=Dict(noisy_model.load_step.height=>0.0), tspan=(0.0, Tf))
-noise_sol = solve(prob2, Tsit5())
-tv = 0:0.002:Tf
-y = noise_sol(tv, idxs=noisy_model.inertia.w) |> vec
-un = noise_sol(tv, idxs=noisy_model.noise.y)-y |> vec
-ud = noise_sol(tv, idxs=noisy_model.load_step.output.u) |> vec
-d = iddata(y', [un ud]', 0.002)
-lsys,_ = newpem(d, 4, focus=:simulation, zeroD=false)
-```
-With an LTI model available, we can ask for the theoretical output covariance we should obtain if we feed a white noise signal with covariance matrix ``0.1^2 I`` through the noise input of the system. We compare this to the actual output covariance obtained from the simulation (discarding the initial transient as well as the transient caused by the load disturbance).
-```@example NOISE
-sqrt(covar(lsys[1,1],0.1^2*I)), std(y[[50:648; 750:end]])
-```
-
 ## Noise filtering
 No discrete-time filter components are available yet. You may, e.g.
 - Add exponential filtering using `xf(k) ~ (1-α)xf(k-1) + α*x(k)`, where `α` is the filter coefficient and `x` is the signal to be filtered.
