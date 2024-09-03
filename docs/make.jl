@@ -32,6 +32,7 @@ makedocs(;
                 "Controlled DC motor" => "examples/dc_motor_pi.md",
              ],
              "Block library" => "blocks.md",
+             "Functions" => "api.md",
          ],
 )
 
