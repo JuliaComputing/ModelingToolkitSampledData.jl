@@ -26,12 +26,14 @@ makedocs(;
          pages = [
              "Home" => "index.md",
              "Tutorials" => [
-                "Getting started with Sampled-Data Systems" => "SampledData.md",
+                "Getting started with Sampled-Data Systems" => "tutorials/SampledData.md",
+                "Noise" => "tutorials/noise.md",
              ],
              "Examples" => [
                 "Controlled DC motor" => "examples/dc_motor_pi.md",
              ],
              "Block library" => "blocks.md",
+             "API" => "api.md",
          ],
 )
 

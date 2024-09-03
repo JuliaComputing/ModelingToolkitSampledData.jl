@@ -144,35 +144,68 @@ A discrete-time noise source that returns a normally-distributed value at each c
 # Parameters
 - `mu = 0`: Mean
 - `sigma = 1`: Standard deviation
+- `seed = 1`: Seed for the random number generator
 
 # Structural parameters
-- `rng`: A random number generator, defaults to `Random.Xoshiro()`.
 - `z`: The `ShiftIndex` used to indicate clock partition.
 
 # Connectors:
 - `output`
 """
 @mtkmodel NormalNoise begin
+    @structural_parameters begin
+        z = ShiftIndex()
+        additive = false
+    end
     @components begin
         output = RealOutput()
+        if additive
+            input = RealInput()
+        end
     end
     @variables begin
         y(t), [description = "Output variable"]
+        if additive
+            u(t), [description = "Input variable"]
+        end
+        n(t), [description = "Internal noise variable"]
     end
     @parameters begin
         mu = 0
         sigma = 1
-    end
-    @structural_parameters begin
-        z = ShiftIndex()
-        rng = Random.Xoshiro()
+        seed = 1
     end
     @equations begin
-        y(z) ~ mu + sigma*Symbolics.term(randn, rng; type=Real)
         output.u ~ y
+        n(z) ~ mu + sigma*Symbolics.term(seeded_randn, seed, t; type=Real)
+        # n(z) ~ mu + sigma*Symbolics.term(randn, rng; type=Real)
+        if additive
+            y(z) ~ u(z) + n(z) + 1e-100*y(z-1) # The 0*y(z-1) is a workaround for a bug in the compiler, to force the y variable to be a discrete-time state variable
+            u ~ input.u
+        else
+            y(z) ~ n(z) + 1e-100*y(z-1)
+        end
     end
 end
 
+"""
+    seeded_randn(seed, t)
+
+Internal function. This function seeds the seed parameter as well as the current simulation time.
+"""
+function seeded_randn(seed, t)
+    rng = StableRNGs.StableRNG(hash(t, hash(seed)))
+    randn(rng)
+end
+"""
+    seeded_rand(seed, t)
+
+Internal function. This function seeds the seed parameter as well as the current simulation time.
+"""
+function seeded_rand(seed, t)
+    rng = StableRNGs.StableRNG(hash(t, hash(seed)))
+    rand(rng)
+end
 
 """
     UniformNoise()
@@ -182,6 +215,7 @@ A discrete-time noise source that returns a uniformly distributed value at each 
 # Parameters
 - `l = 0`: Lower bound
 - `u = 1`: Upper bound
+- `seed = 1`: Seed for the random number generator
 
 # Structural parameters
 - `rng`: A random number generator, defaults to `Random.Xoshiro()`.
@@ -191,25 +225,69 @@ A discrete-time noise source that returns a uniformly distributed value at each 
 - `output`
 """
 @mtkmodel UniformNoise begin
+    @structural_parameters begin
+        z = ShiftIndex()
+        rng = Random.Xoshiro()
+        additive = false
+    end
     @components begin
         output = RealOutput()
+        if additive
+            input = RealInput()
+        end
     end
     @variables begin
         y(t), [description = "Output variable"]
+        n(t), [description = "Internal noise variable"]
     end
     @parameters begin
         l = 0
         u = 1
-    end
-    @structural_parameters begin
-        z = ShiftIndex()
-        rng = Random.Xoshiro()
+        seed = 1
     end
     @equations begin
-        y(z) ~ l + (u-l)*Symbolics.term(rand, rng; type=Real)
         output.u ~ y
+        n(z) ~ l + (u-l)*Symbolics.term(seeded_rand, seed, t; type=Real)
+        # y(z) ~ l + (u-l)*Symbolics.term(rand, rng; type=Real)
+
+        if additive
+            y(z) ~ input.u(z) + n(z) + 1e-100*y(z-1) # The 0*y(z-1) is a workaround for a bug in the compiler, to force the y variable to be a discrete-time state variable
+        else
+            y(z) ~ n(z) + 1e-100*y(z-1)
+        end
     end
 end
+
+"""
+    GenericNoise()
+
+A discrete-time noise source that at each clock tick returns a random value distributed according to the provided distribution.
+
+# Structural parameters
+- `rng`: A random number generator, defaults to `Random.Xoshiro()`.
+- `z`: The `ShiftIndex` used to indicate clock partition.
+- `d`: The distribution to sample from.`
+
+# Connectors:
+- `output`
+"""
+# @mtkmodel GenericNoise begin
+#     @components begin
+#         output = RealOutput()
+#     end
+#     @variables begin
+#         y(t), [description = "Output variable"]
+#     end
+#     @structural_parameters begin
+#         z = ShiftIndex()
+#         rng = Random.Xoshiro()
+#         d
+#     end
+#     @equations begin
+#         y(z) ~ Symbolics.term(rand, rng, d; type=Real)
+#         output.u ~ y
+#     end
+# end
 
 """
     ZeroOrderHold()
