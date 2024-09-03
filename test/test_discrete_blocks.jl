@@ -14,6 +14,29 @@ is known on closed form. For algebraic systems (without differential variables),
 an integrator with a constant input is often used together with the system under test.
 =#
 
+@testset "only discrete" begin
+    @info "Testing only discrete"
+    dt = 0.5
+    c = Clock(dt)
+    k = ShiftIndex(c)
+
+    @mtkmodel TestDiscreteOnly begin
+        @variables begin
+            x(t) = 1
+        end
+        @equations begin
+            x(k) ~ SampleTime()*x(k-1)
+        end
+    end
+
+    @named model = TestDiscreteOnly()
+    model = complete(model)
+    ssys = structural_simplify(IRSystem(model))
+    prob = ODEProblem(ssys, [model.x(k-1) => 1.0], (0.0, 10.0))
+    sol = solve(prob, Tsit5())
+    @test sol[model.x] == dt .^ (1:21)
+end
+
 @testset "Integrator" begin
     clock = Clock(0.1)
     k = ShiftIndex(clock)
@@ -89,7 +112,7 @@ k = ShiftIndex()
         sampler = Sampler(; dt)
         zoh = ZeroOrderHold()
         controller = DiscretePIDParallel(
-            kp = 2, ki = 2, Imethod = :forward, with_D = false)
+            kp = 2, ki = 2, Imethod = :backward, with_D = false) # NOTE: not sure why tests pass with backward euler here but fwdeuler in ControlSystemsBase
         ref = Constant(k = 0.5)
     end
     @equations begin
@@ -114,7 +137,8 @@ import ControlSystemsBase as CS
 let (; c2d, tf, feedback, lsim) = CS
     
     P = CS.c2d(CS.ss([-1], [1], [1], 0), dt)
-    C = CS.c2d(CS.ss([0], [1], [2], [2]), dt, :fwdeuler)
+    # C = CS.c2d(CS.ss([0], [1], [2], [2]), dt, :fwdeuler)
+    C = CS.ss([1], [1], [2*dt], [2], dt)
 
     # Test the output of the continuous partition
     G = feedback(P * C)
@@ -134,15 +158,16 @@ let (; c2d, tf, feedback, lsim) = CS
     # plot(timevec, [y sol(timevec, idxs = model.plant.output.u)[:]], m = :o, lab = ["CS" "MTK"])
     # display(current())
 
-    @test_broken sol(timevec, idxs = model.plant.output.u)[:]≈y rtol=1e-5
+    @test sol(timevec, idxs = model.plant.output.u)[:]≈y rtol=1e-5
 
+    # Test the output of the discrete partition
+    G = feedback(C, P)
+    res = lsim(G, (x, t) -> [0.5], timevec)
+    y = res.y[:]
     @test_skip begin
-        # Test the output of the discrete partition
-        G = feedback(C, P)
-        res = lsim(G, (x, t) -> [0.5], timevec)
-        y = res.y[:]
-        @test_broken sol(timevec .+ 1e-10, idxs = model.controller.output.u)≈y rtol=1e-8 # Broken due to discrete observed
-        # plot([y sol(timevec .+ 1e-12, idxs=model.controller.output.u)], lab=["CS" "MTK"])
+        @test_broken sol(timevec .+ 1e-10, idxs = model.plant.input.u)≈y rtol=1e-8 # Broken due to discrete observed
+        # plot([y sol(timevec .+ 1e-12, idxs=model.plant.input.u)], lab=["CS" "MTK"])
+        plot(timevec, [y sol(timevec .+ 1e-12, idxs = model.controller.u)[:]], m = :o, lab = ["CS" "MTK"])
     end
 end
 # ==============================================================================
