@@ -299,7 +299,7 @@ using Statistics
     @named m = NoiseModel()
     m = complete(m)
     ssys = structural_simplify(IRSystem(m))
-    prob = ODEProblem(ssys, [], (0.0, 10.0))
+    prob = ODEProblem(ssys, [m.noise.y(k-1) => 0], (0.0, 10.0))
     sol = solve(prob, Tsit5())
     @test !all(iszero, sol.u)
     tv = 0:k.clock.dt:sol.t[end]
@@ -325,7 +325,7 @@ end
     @named m = NoiseModel()
     m = complete(m)
     ssys = structural_simplify(IRSystem(m))
-    prob = ODEProblem(ssys, [], (0.0, 10.0))
+    prob = ODEProblem(ssys, [m.noise.y(k-1) => 0], (0.0, 10.0))
     sol = solve(prob, Tsit5())
     @test !all(iszero, sol.u)
     tv = 0:k.clock.dt:sol.t[end]
@@ -366,7 +366,7 @@ end
 
     function test_quant(y_min, y_max, bits)
         u = y_min:(1/2^bits):y_max
-        y = ModelingToolkitSampledData.quantize.(u, bits, y_min, y_max)
+        y = ModelingToolkitSampledData.quantize_midrise.(u, bits, y_min, y_max)
         uy = unique(y)
         @test uy ≈ range(y_min, stop=y_max, length=2^bits)
     end
@@ -377,6 +377,24 @@ end
     test_quant(-5, -2, 2) # Only negative
     test_quant(5, 12, 2) # Only positive
     test_quant(-5, 12, 20) # Large number of bits
+
+
+
+    function test_quant2(y_min, y_max, bits)
+        u = y_min:(1/2^bits):y_max
+        y = ModelingToolkitSampledData.quantize_midtread.(u, bits, y_min, y_max)
+        uy = unique(y) 
+        # @test (2^bits - 2 <= length(uy) <= 2^bits) # This check is not reliable since there might be one ulp difference when the last clamp is applied
+        @test maximum(y) <= y_max
+        @test minimum(y) >= y_min
+    end
+
+    test_quant2(-1, 1, 2) # Symmetric
+    test_quant2(-1, 2, 2) # Not symmetric
+    test_quant2(-1, 1, 3) # Symmetric, uneven number of bits
+    test_quant2(-5, -2, 2) # Only negative
+    test_quant2(5, 12, 2) # Only positive
+    test_quant2(-5, 12, 20) # Large number of bits
 
     z = ShiftIndex(Clock(0.1))
     @mtkmodel QuantizationModel begin
@@ -389,6 +407,25 @@ end
         end
     end
     @named m = QuantizationModel()
+    m = complete(m)
+    ssys = structural_simplify(IRSystem(m))
+    prob = ODEProblem(ssys, [], (0.0, 10.0))
+    sol = solve(prob, Tsit5(), dtmax=0.01)
+    y = sol[m.quant.y]
+    uy = unique(y)
+    @test length(uy) == 4
+
+
+    @mtkmodel QuantizationModel2 begin
+        @components begin
+            input = Sine(amplitude=1, frequency=1)
+            quant = Quantization(; z, bits=2, midrise=false)
+        end
+        @equations begin
+            connect(input.output, quant.input)
+        end
+    end
+    @named m = QuantizationModel2()
     m = complete(m)
     ssys = structural_simplify(IRSystem(m))
     prob = ODEProblem(ssys, [], (0.0, 10.0))

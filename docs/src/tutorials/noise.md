@@ -120,7 +120,7 @@ Internally, a random number generator from [StableRNGs.jl](https://github.com/Ju
 
 ## Quantization
 A signal may be quantized to a fixed number of levels (e.g., 8-bit) using the [`Quantization`](@ref) block. This may be used to simulate, e.g., the quantization that occurs in a AD converter. Below, we have a simple example where a sine wave is quantized to 2 bits (4 levels), limited between -1 and 1:
-```@example
+```@example QUANT
 using ModelingToolkit, ModelingToolkitSampledData, OrdinaryDiffEq, Plots
 using ModelingToolkit: t_nounits as t, D_nounits as D
 z = ShiftIndex(Clock(0.1))
@@ -146,8 +146,22 @@ plot(sol, idxs=m.input.output.u)
 plot!(sol, idxs=m.quant.y, label="Quantized output")
 ```
 
-The output of the quantizer is always between `y_min` and `y_max` inclusive, and the number of distinct levels it can take is `2^bits`. The possible values are given by
+
+
+### Different quantization modes
+With the default option `midrise = true`, the output of the quantizer is always between `y_min` and `y_max` inclusive, and the number of distinct levels it can take is `2^bits`. The possible values are given by
 ```@example
 bits = 2; y_min = -1; y_max = 1
 collect(range(y_min, stop=y_max, length=2^bits))
 ```
+Notably, these possible levels _do not include 0_. If `midrise = false`, a mid-tread quantizer is used instead. The two options are visualized below:
+```@example QUANT
+y_min = -1; y_max = 1; bits = 2
+u = y_min:0.01:y_max
+y_mr = ModelingToolkitSampledData.quantize_midrise.(u, bits, y_min, y_max)
+y_mt = ModelingToolkitSampledData.quantize_midtread.(u, bits, y_min, y_max)
+plot(u, [y_mr y_mt], label=["Midrise" "Midtread"], xlabel="Input", ylabel="Output", framestyle=:zerolines, l=2, seriestype=:step)
+```
+Note how the default mid-rise quantizer mode has a rise at the middle of the interval, while the mid-tread mode has a flat region (a tread) centered around the middle of the interval.
+
+The default option `midrise = true` includes both end points as possible output values, while `midrise = false` does not include the upper limit.

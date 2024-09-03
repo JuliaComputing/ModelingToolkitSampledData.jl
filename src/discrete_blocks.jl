@@ -901,6 +901,7 @@ A quantization block that quantizes the input signal to a specified number of bi
     @extend u, y = siso = SISO()
     @structural_parameters begin
         z = ShiftIndex()
+        midrise = true
     end
     @parameters begin
         y_max = 1, [description = "Upper limit of output"]
@@ -911,17 +912,31 @@ A quantization block that quantizes the input signal to a specified number of bi
     begin
     end
     @equations begin
-        y(z) ~ ifelse(quantized == true, quantize(u(z), bits, y_min, y_max), u(z))
+        y(z) ~ ifelse(quantized == true, quantize(u(z), bits, y_min, y_max, midrise), u(z))
     end
 end
 
-function quantize(u, bits, y_min, y_max)
+function quantize_midrise(u, bits, y_min, y_max)
     d = y_max - y_min
     y1 = clamp(u, y_min, y_max)
     y2 = (y1 - y_min) / d # between 0 and 1
-    levels = 2^Int(bits)-1
-    y3 = round(y2 * levels) / levels # quantized between 0 and 1
+    Δ = 2^Int(bits)-1
+    y3 = round(y2 * Δ) / Δ # quantized between 0 and 1
     y4 = y3*d + y_min
     return y4
 end
-@register_symbolic quantize(u, bits, y_min, y_max)
+
+function quantize_midtread(u, bits, y_min, y_max)
+    Δ = (y_max - y_min) / (2^Int(bits)-1)
+    # clamp(Δ * floor(u / Δ + 0.5), y_min, y_max)
+    k = sign(u) * max(0, floor((abs(u) - Δ/2) / Δ + 1))
+    y0 = sign(k) * (Δ/2 + Δ*(abs(k)-1/2))
+    y1 = iszero(y0) ? zero(y0) : y0 # remove -0.0
+    return clamp(y1, y_min, y_max - Δ/2)
+end
+
+function quantize(u, bits, y_min, y_max, midrise)
+    midrise ? quantize_midrise(u, bits, y_min, y_max) : quantize_midtread(u, bits, y_min, y_max)
+end
+
+@register_symbolic quantize(u::Real, bits::Real, y_min::Real, y_max::Real, midrise::Bool)
