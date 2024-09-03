@@ -4,14 +4,24 @@ authors = ["Fredrik Bagge Carlson"]
 version = "0.1.0"
 
 [deps]
+DiffEqCallbacks = "459566f4-90b8-5000-8ac3-15dfb0a30def"
 JuliaSimCompiler = "8391cb6b-4921-5777-4e45-fd9aab8cb88d"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 ModelingToolkitStandardLibrary = "16a59e39-deab-5bd0-87e4-056b12336739"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"
 
 [compat]
+DiffEqCallbacks = "~3.8"
 julia = "1.10"
+StableRNGs = "1"
+JuliaSimCompiler = "1.19"
+ModelingToolkit = "9"
+ModelingToolkitStandardLibrary = "2"
+OrdinaryDiffEq = "6.89"
+Random = "1"
+
 
 [extras]
 ControlSystemsBase = "aaaaaaaa-a6ca-5380-bf3e-84a91bcd477e"
