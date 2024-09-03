@@ -119,6 +119,7 @@ Internally, a random number generator from [StableRNGs.jl](https://github.com/Ju
 2. Multiple calls to the random number generator at the same time step all return the same number.
 
 ## Quantization
+
 A signal may be quantized to a fixed number of levels (e.g., 8-bit) using the [`Quantization`](@ref) block. This may be used to simulate, e.g., the quantization that occurs in a AD converter. Below, we have a simple example where a sine wave is quantized to 2 bits (4 levels), limited between -1 and 1:
 ```@example QUANT
 using ModelingToolkit, ModelingToolkitSampledData, OrdinaryDiffEq, Plots

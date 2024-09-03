@@ -354,6 +354,32 @@ end
     sol = solve(prob, Tsit5())
     @test !all(iszero, sol.u)
     tv = 0:k.clock.dt:sol.t[end]
+    @test std(sol(tv, idxs = m.plant.u)) ≈ 1 rtol=0.1
+    @test mean(sol(tv, idxs = m.plant.u)) ≈ 0 atol=0.08
+end
+
+@testset "UniformNoise" begin
+    k = ShiftIndex(Clock(0.01))
+
+    @mtkmodel NoiseModel begin
+        @components begin
+            noise = UniformNoise(z = k)
+            zoh = ZeroOrderHold(z = k)
+            plant = FirstOrder(T = 1e-4) # Included due to bug with only discrete-time systems
+        end
+        @equations begin
+            connect(noise.output, zoh.input)
+            connect(zoh.output, plant.input)
+        end
+    end
+
+    @named m = NoiseModel()
+    m = complete(m)
+    ssys = structural_simplify(IRSystem(m))
+    prob = ODEProblem(ssys, [], (0.0, 10.0))
+    sol = solve(prob, Tsit5())
+    @test !all(iszero, sol.u)
+    tv = 0:k.clock.dt:sol.t[end]
     @test minimum(sol(tv, idxs = m.plant.u)) ≈ 0 atol=0.02
     @test maximum(sol(tv, idxs = m.plant.u)) ≈ 1 atol=0.02
 end
