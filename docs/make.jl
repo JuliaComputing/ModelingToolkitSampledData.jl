@@ -1,4 +1,5 @@
 using ModelingToolkitSampledData
+using ModelingToolkit
 using Documenter
 using Plots
 gr(fmt=:png)

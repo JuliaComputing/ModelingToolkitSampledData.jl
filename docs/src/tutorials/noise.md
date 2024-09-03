@@ -102,6 +102,7 @@ A signal may be quantized to a fixed number of levels (e.g., 8-bit) using the [`
 ```@example QUANT
 using ModelingToolkit, ModelingToolkitSampledData, OrdinaryDiffEq, Plots
 using ModelingToolkit: t_nounits as t, D_nounits as D
+using ModelingToolkitStandardLibrary.Blocks
 z = ShiftIndex(Clock(0.1))
 @mtkmodel QuantizationModel begin
     @components begin

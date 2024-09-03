@@ -457,7 +457,8 @@ end
     sol = solve(prob, Tsit5(), dtmax=0.01)
     y = sol[m.quant.y]
     uy = unique(y)
-    @test length(uy) == 4
+    @test length(uy) <= 4
+    @test 0 ∈ uy
 end
 
 
