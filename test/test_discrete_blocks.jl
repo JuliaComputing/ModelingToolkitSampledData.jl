@@ -483,7 +483,6 @@ end
     ssys = structural_simplify(IRSystem(m))
     prob = ODEProblem(ssys, [m.filter.y(z-1) => 0], (0.0, 10.0))
     sol = solve(prob, Tsit5(), dtmax=0.1)
-    plot(sol, idxs=m.filter.y)
     @test sol(10, idxs=m.filter.y) ≈ 1 atol=0.001
     @test sol(0.999, idxs=m.filter.y) == 0
     @test sol(1.1, idxs=m.filter.y) > 0
