@@ -971,3 +971,43 @@ Exponential filtering with input-output relation ``y(z) ~ (1 - a) y(z-1) + a u(z
     end
 end
 
+"""
+    DiscreteOnOffController(b = 0.1, bool = true)
+
+Discrete-time On-Off controller with hysteresis. The controller switches between two states based on the error signal `reference-input`. The controller is in the on-state if the error signal is within the bandwidth `b` around the reference signal, and in the off-state otherwise.
+
+# Connectors:
+- `reference`: The reference signal to the controller
+- `input`: The measurement feedback
+- `output`: The control signal output
+
+# Parameters:
+- `b`: Bandwidth around reference signal within which the controller does not react
+- `bool`: (structural) If true (default), the controller switches between 0 and 1. If false, the controller switches between -1 and 1.
+- `k`: Controller gain. The output of the contorller is scaled by this gain, i.e., `k = 2, bool = false` will result in an output of -2 or 2.
+"""
+@mtkmodel DiscreteOnOffController begin
+    @extend u, y = siso = SISO()
+    @components begin
+        reference = RealInput()
+    end
+    @structural_parameters begin
+        z = ShiftIndex()
+        bool = true
+    end
+    @parameters begin
+        b = 0.1, [description = "Bandwidth around reference signal"]
+        k = 1, [description = "Controller gain"]
+    end
+    @variables begin
+        s(t)=true, [description = "Internal variable"]
+    end
+    @equations begin
+        s(z) ~ (y(z-1) == k) & (u(z) < reference.u(z) + b/2) | (u(z) < reference.u(z) - b/2)
+        if bool
+            y(z) ~ k*s(z)
+        else
+            y(z) ~ k*(2*s(z) - 1)
+        end
+    end
+end
