@@ -913,8 +913,6 @@ This block is not differentiable, the derivative is zero everywhere exect for at
         bits::Int = 8, [description = "Number of bits of quantization"]
         quantized::Bool = true, [description = "If quantization effects shall be computed."]
     end
-    begin
-    end
     @equations begin
         y(z) ~ ifelse(quantized == true, quantize(u(z), bits, y_min, y_max, midrise), u(z))
     end
@@ -1012,5 +1010,59 @@ Discrete-time On-Off controller with hysteresis. The controller switches between
         else
             y(z) ~ k*(2*s(z) - 1)
         end
+    end
+end
+
+"""
+    SampleWithADEffects(quantized = false, noisy = false)
+
+A sampler with additional effects that appear in practical systems, such as measurement noise and quantization.
+
+The operations occur in the order
+1. Sampling
+2. Noise addition
+3. Quantization
+
+# Structural parameters:
+- `quantized`: If true, the output is quantized. When this option is used, the output is quantized to the number of bits specified by the `bits` parameter. The quantization is midrise if `midrise = true`, otherwise it is midtread. The output is also limited to the range `[y_min, y_max]`.
+- `noisy`: If true, the output is corrupted by additive white Gaussian noise with standard deviation `sigma` (defaults to 0.1). If `noisy = false`, the noise block is a unit gain.
+- `dt`: Sample interval of the sampler. If not specified, the sample interval is inferred from the clock of the system.
+- `clock`: Clock signal of the system. If not specified, the sample interval is inferred from the clock of the system. If `clock` is specified, the parameter `dt` has no effect.
+
+# Parameters:
+- `y_min`: Lower limit of output, defaults to -1. Only used if `quantized = true`.
+- `y_max`: Upper limit of output, defaults to 1. Only used if `quantized = true`.
+- `bits`: Number of bits of quantization, defaults to 8 (256 output levels between `y_min` and `y_max`). Only used if `quantized = true`.
+- `sigma`: Standard deviation of the additive Gaussian noise, defaults to 0.1. Only used if `noisy = true`.
+"""
+@mtkmodel SampleWithADEffects begin
+    @extend input, output = siso = SISO()
+    @structural_parameters begin
+        dt = nothing
+        clock = (dt === nothing ? InferredDiscrete() : Clock(dt))
+        midrise = true
+        quantized = false
+        noisy = false
+    end
+    @parameters begin
+        y_min = -1, [description = "Lower limit of output"]
+        y_max = 1, [description = "Upper limit of output"]
+        bits = 8, [description = "Number of bits of quantization"]
+        sigma = 0.1, [description = "Standard deviation of the additive noise"]
+    end
+    @components begin
+        sampler = Sampler(; clock)
+        if noisy
+            noise = NormalNoise(; sigma, additive = true)
+        else
+            noise = Gain(; k = 1)
+        end
+        quantization = Quantization(; y_min, y_max, midrise, quantized)
+    end
+    @equations begin
+        connect(input, sampler.input)
+        connect(sampler.output, noise.input)
+        connect(noise.output, quantization.input)
+        connect(quantization.output, output)
     end
 end
