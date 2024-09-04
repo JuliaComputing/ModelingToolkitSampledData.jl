@@ -28,13 +28,12 @@ makedocs(;
              "Home" => "index.md",
              "Tutorials" => [
                 "Getting started with Sampled-Data Systems" => "tutorials/SampledData.md",
-                "Noise" => "tutorials/noise.md",
+                "Noise and measurement corruption" => "tutorials/noise.md",
              ],
              "Examples" => [
                 "Controlled DC motor" => "examples/dc_motor_pi.md",
              ],
-             "Block library" => "blocks.md",
-             "Functions" => "api.md",
+             "Library API" => "blocks.md",
          ],
 )
 

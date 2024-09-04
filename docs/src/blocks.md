@@ -4,6 +4,27 @@
 ```@index
 ```
 
+## Basic blocks
+- [`Delay`](@ref)
+- [`Difference`](@ref)
+- [`DiscreteDerivative`](@ref)
+- [`DiscreteIntegrator`](@ref)
+- [`Sampler`](@ref)
+- [`ZeroOrderHold`](@ref)
+
+## Noise and measurement corruption
+- [`NormalNoise`](@ref)
+- [`Quantization`](@ref)
+- [`UniformNoise`](@ref)
+
+## Controllers
+- [`DiscretePIDParallel`](@ref)
+- [`DiscretePIDStandard`](@ref)
+
+## Discrete-time filters
+- [`ExponentialFilter`](@ref)
+
+
 ## Docstrings
 
 ```@autodocs
