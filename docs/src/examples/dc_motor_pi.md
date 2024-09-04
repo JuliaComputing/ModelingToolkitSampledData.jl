@@ -104,7 +104,7 @@ Plots.plot(p1, p2, layout = (2, 1))
 
 ## Discrete-time controller
 
-Until now, we have modeled both the physical part of the system, the DC motor, and the control systems, in continuous time. In practice, it is common to implement control systems on a computer operating at a fixed sample rate, i.e, in discrete time. A system containing both continuous-time parts and discrete-time parts is often referred to as a "sampled-data system", and the ModelingToolkit standard library contains several components to model such systems.
+Until now, we have modeled both the physical part of the system, the DC motor, and the control systems, in continuous time. In practice, it is common to implement control systems on a computer operating at a fixed sample rate, i.e, in discrete time. A system containing both continuous-time parts and discrete-time parts is often referred to as a "sampled-data system", and the ModelingToolkit standard library together with ModelingToolkitSampledData.jl contain several components to model such systems.
 
 Below, we re-model the system, this time with a discrete-time controller: [`DiscretePIDStandard`](@ref). To interface between the continuous and discrete parts of the model, we make use of a [`Sampler`](@ref) and [`ZeroOrderHold`](@ref) blocks. Apart from the three aforementioned components, the model is the same as before.
 

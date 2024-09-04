@@ -462,3 +462,29 @@ end
 end
 
 
+@testset "ExponentialFilter" begin
+    @info "Testing ExponentialFilter"
+    z = ShiftIndex(Clock(0.1))
+    @mtkmodel ExponentialFilterModel begin
+        @components begin
+            input = Step(start_time=1, smooth=false)
+            filter = ExponentialFilter(; a = 0.1, z)
+        end
+        @variables begin
+            x(t) = 0 # Dummy variable to workaround JSCompiler bug
+        end
+        @equations begin
+            connect(input.output, filter.input)
+            D(x) ~ 0
+        end
+    end
+    @named m = ExponentialFilterModel()
+    m = complete(m)
+    ssys = structural_simplify(IRSystem(m))
+    prob = ODEProblem(ssys, [m.filter.y(z-1) => 0], (0.0, 10.0))
+    sol = solve(prob, Tsit5(), dtmax=0.1)
+    @test sol(10, idxs=m.filter.y) ≈ 1 atol=0.001
+    @test sol(0.999, idxs=m.filter.y) == 0
+    @test sol(1.1, idxs=m.filter.y) > 0
+
+end

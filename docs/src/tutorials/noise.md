@@ -1,11 +1,12 @@
 # Measurement noise and corruption
-Measurement noise is practically always present in signals originating from real-world sensors. In a sampled-data system, analyzing the influence of measurement noise using simulation is relatively straight forward. Below, we add Gaussian white noise to the speed sensor signal in the DC motor example. The noise is added using the [`NormalNoise`](@ref) block.
+Measurement noise is practically always present in signals originating from real-world sensors. In a sampled-data system, analyzing the influence of measurement noise using simulation is relatively straight forward. Below, we add Gaussian white noise to the speed sensor signal in the DC-motor example from [DC Motor with PI-controller](@ref). The noise is added using the [`NormalNoise`](@ref) block.
 
 This block has two modes of operation
 1. If `additive = false` (default), the block has the connector `output` only, and this output is the noise signal.
 2. If `additive = true`, the block has the connectors `input` and `output`, and the output is the sum of the input and the noise signal, i.e., the noise is _added_ to the input signal. This mode makes it convenient to add noise to a signal in a sampled-data system.
 
 ## Example: Noise
+This example is a continuation of the DC-motor example from [DC Motor with PI-controller](@ref). We add Gaussian white noise with ``σ^2 = 0.1^2`` to the speed sensor signal.
 ```@example NOISE
 using ModelingToolkit
 using ModelingToolkit: t_nounits as t
@@ -84,9 +85,9 @@ plot(figy, figu, plot_title = "DC Motor with Discrete-time Speed Controller")
 ```
 
 ## Noise filtering
-No discrete-time filter components are available yet. You may, e.g.
-- Add exponential filtering using `xf(k) ~ (1-α)xf(k-1) + α*x(k)`, where `α` is the filter coefficient and `x` is the signal to be filtered.
-- Add moving average filtering using `xf(k) ~ 1/N sum(i->x(k-i), i=0:N-1)`, where `N` is the number of samples to average over.
+You may, e.g.
+- Use [`ExponentialFilter`](@ref) to add exponential filtering using `y(k) ~ (1-a)y(k-1) + a*u(k)`, where `a` is the filter coefficient and `u` is the signal to be filtered.
+- Add moving average filtering using `y(k) ~ 1/N sum(i->u(k-i), i=0:N-1)`, where `N` is the number of samples to average over.
 
 ## Colored noise
 Colored noise can be achieved by filtering white noise through a filter with the desired spectrum. No components are available for this yet.

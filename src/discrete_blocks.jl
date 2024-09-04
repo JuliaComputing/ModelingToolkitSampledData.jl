@@ -888,6 +888,7 @@ A quantization block that quantizes the input signal to a specified number of bi
 - `y_min`: Lower limit of output
 - `bits`: Number of bits of quantization
 - `quantized`: If quantization effects shall be computed. If false, the output is equal to the input, which may be useful for, e.g., linearization.
+- `midrise`: (structural) If true (default), the quantizer is a midrise quantizer, otherwise it is a midtread quantizer. See [Docs: Quantization](https://juliacomputing.github.io/ModelingToolkitSampledData.jl/dev/tutorials/noise/#Quantization) for more details.
 
 # Connectors:
 - `input`
@@ -940,3 +941,33 @@ function quantize(u, bits, y_min, y_max, midrise)
 end
 
 @register_symbolic quantize(u::Real, bits::Real, y_min::Real, y_max::Real, midrise::Bool)
+
+"""
+    ExponentialFilter(a = 0.1)
+
+Exponential filtering with input-output relation ``y(z) ~ (1 - a) y(z-1) + a u(z-1)``
+
+# Parameters:
+- `a`: Filter parameter `[0, 1]`, a small value implies stronger filtering. 
+
+# Variables:
+- `u`: Input signal
+- `y`: Output signal
+
+# Connectors:
+- `input::RealInput`: Input signal
+- `output::RealOutput`: Output signal
+"""
+@mtkmodel ExponentialFilter begin
+    @extend u, y = siso = SISO()
+    @structural_parameters begin
+        z = ShiftIndex()
+    end
+    @parameters begin
+        a = 0.1, [description = "Filter parameter"]
+    end
+    @equations begin
+        y(z) ~ (1 - a) * y(z-1) + a * u(z)
+    end
+end
+
