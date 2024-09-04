@@ -461,6 +461,33 @@ end
     @test 0 ∈ uy
 end
 
+@testset "OnOff" begin
+    @info "Testing OnOff"
+    cl = Clock(0.1)
+    z = ShiftIndex(cl)
+    @mtkmodel OnOffModel begin
+        @components begin
+            onoff = DiscreteOnOffController(; z, bool=false)
+            c = Constant(k=1)
+        end
+        @variables begin
+            x(t) = 0 
+        end
+        @equations begin
+            onoff.u ~ Sample(cl)(x)
+            connect(c.output, onoff.reference)
+            D(x) ~ 0.1x + Hold(onoff.y)
+        end
+    end
+    @named m = OnOffModel()
+    m = complete(m)
+    ssys = structural_simplify(IRSystem(m))
+    prob = ODEProblem(ssys, [m.onoff.y(z-1) => 0], (0.0, 4.0))
+    sol = solve(prob, Tsit5(), dtmax=0.1)
+    # plot(sol, idxs=[m.x, m.onoff.y], title="On-off control of an unstable first-order system")
+    @test 0.89 <= sol(4, idxs=m.x) <= 1.11
+end
+
 
 @testset "ExponentialFilter" begin
     @info "Testing ExponentialFilter"
