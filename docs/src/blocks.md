@@ -20,6 +20,7 @@
 ## Controllers
 - [`DiscretePIDParallel`](@ref)
 - [`DiscretePIDStandard`](@ref)
+- [`DiscreteOnOffController`](@ref)
 
 ## Discrete-time filters
 - [`ExponentialFilter`](@ref)
