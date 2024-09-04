@@ -940,3 +940,33 @@ function quantize(u, bits, y_min, y_max, midrise)
 end
 
 @register_symbolic quantize(u::Real, bits::Real, y_min::Real, y_max::Real, midrise::Bool)
+
+
+"""
+    MovingAverageFilter(N = 3)
+
+Exponential filtering with input-output relation ``y(z) ~ sum(u(z-i) for i in 0:N-1) / N``.
+
+Please note: this implementation of a moving average filter is not optimized for very large number of filter taps `N`.
+
+# Parameters:
+- `N`: (structural) Number of samples to average over
+
+# Variables:
+- `u`: Input signal
+- `y`: Output signal
+
+# Connectors:
+- `input::RealInput`: Input signal
+- `output::RealOutput`: Output signal
+"""
+@mtkmodel MovingAverageFilter begin
+    @extend u, y = siso = SISO()
+    @structural_parameters begin
+        z = ShiftIndex()
+        N = 3
+    end
+    @equations begin
+        y(z) ~ sum(u(z-i) for i in 0:N-1) / N
+    end
+end
