@@ -897,6 +897,9 @@ A quantization block that quantizes the input signal to a specified number of bi
 # Variables
 - `y`: Output signal, equal to `output.u`
 - `u`: Input signal, equal to `input.u`
+
+# Automatic differentiation
+This block is not differentiable, the derivative is zero everywhere exect for at the level transition where it is ill defined. To use in a differentiable context, set `quantized = false` which turns this block into the identity function.
 """
 @mtkmodel Quantization begin
     @extend u, y = siso = SISO()
