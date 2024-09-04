@@ -512,7 +512,6 @@ end
     @test 0.89 <= sol(4, idxs=m.x) <= 1.11
 end
 
-
 @testset "ExponentialFilter" begin
     @info "Testing ExponentialFilter"
     z = ShiftIndex(Clock(0.1))
@@ -538,6 +537,34 @@ end
     @test sol(0.999, idxs=m.filter.y) == 0
     @test sol(1.1, idxs=m.filter.y) > 0
 
+end
+
+@testset "MovingAverageFilter" begin
+    @info "Testing MovingAverageFilter"
+    z = ShiftIndex(Clock(0.1))
+    @mtkmodel MovingAverageFilterModel begin
+        @components begin
+            input = Step(start_time=1, smooth=false)
+            filter = MovingAverageFilter(; N=3, z)
+        end
+        @variables begin
+            x(t) = 0 # Dummy variable to workaround JSCompiler bug
+        end
+        @equations begin
+            connect(input.output, filter.input)
+            D(x) ~ 0
+        end
+    end
+
+    @named m = MovingAverageFilterModel()
+    m = complete(m)
+    ssys = structural_simplify(IRSystem(m))
+    prob = ODEProblem(ssys, [m.filter.u(z-i) => 0 for i = 0:3], (0.0, 2.0))
+    sol = solve(prob, Tsit5(), dtmax=0.1)
+    # plot(sol, idxs=m.filter.y)
+    @test sol(1.5, idxs=m.filter.y) == 1
+    @test sol(0.999, idxs=m.filter.y) == 0
+    @test 0 < sol(1.1, idxs=m.filter.y) < 1
 end
 
 @testset "sampling with AD effects" begin

@@ -87,7 +87,8 @@ plot(figy, figu, plot_title = "DC Motor with Discrete-time Speed Controller")
 ## Noise filtering
 You may, e.g.
 - Use [`ExponentialFilter`](@ref) to add exponential filtering using `y(k) ~ (1-a)y(k-1) + a*u(k)`, where `a` is the filter coefficient and `u` is the signal to be filtered.
-- Add moving average filtering using `y(k) ~ 1/N sum(i->u(k-i), i=0:N-1)`, where `N` is the number of samples to average over.
+No discrete-time filter components are available yet. You may, e.g.
+- Add moving average filtering using [`MovingAverageFilter`](@ref) according to `y(k) ~ 1/N * sum(u(k-i) for i=0:N-1)`, where `N` is the number of samples to average over.
 
 ## Colored noise
 Colored noise can be achieved by filtering white noise through a filter with the desired spectrum. No components are available for this yet.

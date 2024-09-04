@@ -1040,6 +1040,34 @@ Y(z) = \\dfrac{a}{1 - (1 - a) z^{-1}} U(z)
 end
 
 """
+    MovingAverageFilter(N = 3)
+
+Exponential filtering with input-output relation ``y(z) ~ sum(u(z-i) for i in 0:N-1) / N``.
+
+Please note: this implementation of a moving average filter is not optimized for very large number of filter taps `N`.
+
+# Parameters:
+- `N`: (structural) Number of samples to average over
+# Variables:
+- `u`: Input signal
+- `y`: Output signal
+
+# Connectors:
+- `input::RealInput`: Input signal
+- `output::RealOutput`: Output signal
+"""
+@mtkmodel MovingAverageFilter begin
+    @extend u, y = siso = SISO()
+    @structural_parameters begin
+        z = ShiftIndex()
+        N = 3
+    end
+    @equations begin
+        y(z) ~ sum(u(z-i) for i in 0:N-1) / N
+    end
+end
+
+"""
     DiscreteOnOffController(b = 0.1, bool = true)
 
 Discrete-time On-Off controller with hysteresis. The controller switches between two states based on the error signal `reference-input`. The controller is in the on-state if the error signal is within the bandwidth `b` around the reference signal, and in the off-state otherwise.
