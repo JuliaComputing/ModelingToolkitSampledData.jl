@@ -88,6 +88,48 @@ plot(figy, figu, plot_title = "DC Motor with Discrete-time Speed Controller")
 You may, e.g.
 - Use [`ExponentialFilter`](@ref) to add exponential filtering using `y(k) ~ (1-a)y(k-1) + a*u(k)`, where `a` is the filter coefficient and `u` is the signal to be filtered.
 - Add moving average filtering using `y(k) ~ 1/N sum(i->u(k-i), i=0:N-1)`, where `N` is the number of samples to average over.
+- Construct a filter transfer function using [`DiscreteTransferFunction`](@ref). If ControlSystemsBase is loaded, `ControlSystemsBase.TransferFunction` objects can be used to construct a [`DiscreteTransferFunction`](@ref). For advanced filter design, see [DSP.jl: Filter design](https://docs.juliadsp.org/stable/filters/#Filter-design), example below.
+
+### Filter design using DSP.jl
+Here, we design a fourth-order Butterworth low-pass filter with a cutoff frequency of 100 Hz and apply it to a noisy signal. The filter is designed using DSP.jl and converted to a transfer function from ControlSystemsBase.jl. The transfer function can be passed to the [`DiscreteTransferFunction`](@ref) block. We also design an [`ExponentialFilter`](@ref) for comparison.
+```@example NOISE
+using ControlSystemsBase: tf
+using ControlSystemsBase.DSP: digitalfilter, Lowpass, Butterworth
+fs = 1000
+cutoff = 100
+z = ShiftIndex(Clock(1/fs))
+F_dsp = digitalfilter(Lowpass(cutoff; fs), Butterworth(4))
+F_tf = tf(F_dsp)
+@mtkmodel FilteredNoise begin
+    @components begin
+    sine = Sine(amplitude=1, frequency=10)
+        noise = NormalNoise(sigma = 0.1, additive = true)
+        filter1 = ExponentialFilter(a = 0.2)
+        filter2 = DiscreteTransferFunction(F_tf; z)
+    end
+    @variables begin
+        x(t) = 0 # Dummy variable to work around a bug for models without continuous-time state
+    end
+    @equations begin
+        connect(sine.output, noise.input)
+        connect(noise.output, filter1.input, filter2.input)
+        D(x) ~ 0 # Dummy equation
+    end
+end
+@named m = FilteredNoise()
+m = complete(m)
+ssys = structural_simplify(IRSystem(m))
+prob = ODEProblem(ssys, [
+        m.filter1.y(z-1) => 0;
+        [m.filter2.y(z-k) => 0 for k = 1:4];
+        [m.filter2.u(z-k) => 0 for k = 1:4];
+        m.noise.y(z-1) => 0;
+], (0.0, 0.1))
+sol = solve(prob, Tsit5())
+plot(sol, idxs=m.noise.y, label="Noisy signal", c=1)
+plot!(sol, idxs=m.filter1.y, label="Exponential filtered signal", c=2)
+plot!(sol, idxs=m.filter2.y, label="Butterworth filtered signal", c=3)
+```
 
 ## Colored noise
 Colored noise can be achieved by filtering white noise through a filter with the desired spectrum. No components are available for this yet.
