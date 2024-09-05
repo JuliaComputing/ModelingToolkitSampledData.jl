@@ -515,3 +515,58 @@ end
     @test sol(1.1, idxs=m.filter.y) > 0
 
 end
+
+@testset "DiscreteTransferFunction" begin
+    @info "Testing DiscreteTransferFunction"
+    z = ShiftIndex(Clock(0.1))
+    @mtkmodel DiscreteTransferFunctionModel begin
+        @components begin
+            input = Step(start_time=1, smooth=false)
+            filter = DiscreteTransferFunction(; a = [1, -0.9048374180359594], b = [0.09516258196404037], z)
+        end
+        @variables begin
+            x(t) = 0 # Dummy variable to workaround JSCompiler bug
+        end
+        @equations begin
+            connect(input.output, filter.input)
+            D(x) ~ 0
+        end
+    end
+    @named m = DiscreteTransferFunctionModel()
+    m = complete(m)
+    ssys = structural_simplify(IRSystem(m))
+    prob = ODEProblem(ssys, [m.filter.y(z-1) => 0], (0.0, 10.0))
+    sol = solve(prob, Tsit5(), dtmax=0.1)
+    @test sol(10, idxs=m.filter.y) ≈ 1 atol=0.001
+    @test sol(0.999, idxs=m.filter.y) == 0
+    @test sol(1.1, idxs=m.filter.y) > 0
+    @test sol(1:10, idxs=m.filter.y).u ≈ [0.0, 0.6321205588285568, 0.8646647167633857, 0.950212931632134, 0.9816843611112637, 0.9932620530009122, 0.9975212478233313, 0.9990881180344431, 0.999664537372095, 0.9998765901959109]
+
+    import ControlSystemsBase as CS
+    Gc = CS.tf(1, [1, 1])
+    G = CS.c2d(Gc, 0.1)
+
+    @mtkmodel DiscreteTransferFunctionModel begin
+        @components begin
+            input = Step(start_time=1, smooth=false)
+            filter = DiscreteTransferFunction(G)
+        end
+        @variables begin
+            x(t) = 0 # Dummy variable to workaround JSCompiler bug
+        end
+        @equations begin
+            connect(input.output, filter.input)
+            D(x) ~ 0
+        end
+    end
+    @named m = DiscreteTransferFunctionModel()
+    m = complete(m)
+    ssys = structural_simplify(IRSystem(m))
+    prob = ODEProblem(ssys, [m.filter.y(z-1) => 0], (0.0, 10.0))
+    sol = solve(prob, Tsit5(), dtmax=0.1)
+    @test sol(10, idxs=m.filter.y) ≈ 1 atol=0.001
+    @test sol(0.999, idxs=m.filter.y) == 0
+    @test sol(1.1, idxs=m.filter.y) > 0
+    @test sol(1:10, idxs=m.filter.y).u ≈ [0.0, 0.6321205588285568, 0.8646647167633857, 0.950212931632134, 0.9816843611112637, 0.9932620530009122, 0.9975212478233313, 0.9990881180344431, 0.999664537372095, 0.9998765901959109]
+
+end
