@@ -12,4 +12,7 @@ export DiscreteIntegrator, DiscreteDerivative, Delay, Difference, ZeroOrderHold,
 export DiscreteOnOffController
 include("discrete_blocks.jl")
 
+
+runtime(ssys::JuliaSimCompiler.ScheduledSystem) = ssys.discrete_info.callback.affect!.affect!.x
+
 end
