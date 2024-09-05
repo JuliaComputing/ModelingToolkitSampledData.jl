@@ -910,7 +910,7 @@ This block is not differentiable, the derivative is zero everywhere exect for at
     @parameters begin
         y_max = 1, [description = "Upper limit of output"]
         y_min = -1, [description = "Lower limit of output"]
-        bits::Int = 8, [description = "Number of bits of quantization"]
+        bits = 8, [description = "Number of bits of quantization"]
         quantized::Bool = true, [description = "If quantization effects shall be computed."]
     end
     @equations begin
@@ -1057,7 +1057,7 @@ The operations occur in the order
         else
             noise = Gain(; k = 1)
         end
-        quantization = Quantization(; y_min, y_max, midrise, quantized)
+        quantization = Quantization(; bits, y_min, y_max, midrise, quantized)
     end
     @equations begin
         connect(input, sampler.input)
