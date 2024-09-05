@@ -987,7 +987,7 @@ Discrete-time On-Off controller with hysteresis. The controller switches between
 # Parameters:
 - `b`: Bandwidth around reference signal within which the controller does not react
 - `bool`: (structural) If true (default), the controller switches between 0 and 1. If false, the controller switches between -1 and 1.
-- `k`: Controller gain. The output of the contorller is scaled by this gain, i.e., `k = 2, bool = false` will result in an output of -2 or 2.
+- `k`: Controller gain. The output of the controller is scaled by this gain, i.e., `k = 2, bool = false` will result in an output of -2 or 2.
 """
 @mtkmodel DiscreteOnOffController begin
     @extend u, y = siso = SISO()
