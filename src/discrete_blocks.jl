@@ -948,7 +948,10 @@ end
 """
     ExponentialFilter(a = 0.1)
 
-Exponential filtering with input-output relation ``y(z) ~ (1 - a) y(z-1) + a u(z-1)``
+Exponential filtering (first-order filter) with input-output relation ``y(z) ~ (1 - a) y(z-1) + a u(z-1)``, transfer function
+```math
+Y(z) = \\dfrac{a}{1 - (1 - a) z^{-1}} U(z)
+```
 
 # Parameters:
 - `a`: Filter parameter `[0, 1]`, a small value implies stronger filtering. 
