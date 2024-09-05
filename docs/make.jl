@@ -33,6 +33,7 @@ makedocs(;
              "Examples" => [
                 "Controlled DC motor" => "examples/dc_motor_pi.md",
                 "On-off controller" => "examples/onoffcontroller.md",
+                "Sliding-mode control" => "examples/sliding_mode_control.md",
              ],
              "Library API" => "blocks.md",
          ],
