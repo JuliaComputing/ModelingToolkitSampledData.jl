@@ -12,7 +12,14 @@ OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"
 
+[weakdeps]
+ControlSystemsBase = "aaaaaaaa-a6ca-5380-bf3e-84a91bcd477e"
+
+[extensions]
+ModelingToolkitSampledDataControlSystemsBaseExt = ["ControlSystemsBase"]
+
 [compat]
+ControlSystemsBase = "1"
 DiffEqCallbacks = "~3.8"
 JuliaSimCompiler = "0.1.19"
 ModelingToolkit = "9"

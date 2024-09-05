@@ -718,25 +718,57 @@ With the coeffiencents specified in decreasing orders of ``z``, i.e., ``b = [b_{
 - `output`: Output signal
 
 # Extended help:
-This component supports SISO systems only. To simulate MIMO transfer functions, use [ControlSystemsBase.jl](https://juliacontrol.github.io/ControlSystems.jl/stable/man/creating_systems/) to convert the transfer function to a statespace system, optionally compute a minimal realization using [`minreal`](https://juliacontrol.github.io/ControlSystems.jl/stable/lib/constructors/#ControlSystemsBase.minreal), and then use a [`DiscreteStateSpace`](@ref) component instead.
+This component supports SISO systems only. To simulate MIMO transfer functions, use [ControlSystemsBase.jl](https://juliacontrol.github.io/ControlSystems.jl/stable/man/creating_systems/) to convert the transfer function to a statespace system.
 
-See also [ControlSystemsMTK.jl](https://juliacontrol.github.io/ControlSystemsMTK.jl/stable/) for an interface between [ControlSystems.jl](https://juliacontrol.github.io/ControlSystems.jl/stable/) and ModelingToolkit.jl for advanced manipulation of transfer functions and linear statespace systems. For linearization, see [`linearize`](@ref) and [Linear Analysis](https://docs.sciml.ai/ModelingToolkitStandardLibrary/stable/API/linear_analysis/).
+See also [ControlSystemsMTK.jl](https://juliacontrol.github.io/ControlSystemsMTK.jl/stable/) for an interface between [ControlSystems.jl](https://juliacontrol.github.io/ControlSystems.jl/stable/) and ModelingToolkit.jl for advanced manipulation of transfer functions and linear statespace systems.
 """
+@component function DiscreteTransferFunction(; a = [1], b = [1],
+        verbose = true,
+        z = ShiftIndex(),
+        name,
+    )
+    na = length(a)
+    nb = length(b)
+    verbose && nb > na && @warn "DiscreteTransferFunction: Numerator degree is larger than denominator degree, this is not a proper transfer function. Simulation of a model including this transfer funciton will require at least $(nb-na) samples additional delay in series. Silence this warning with verbose=false"
+    @parameters begin
+        (b[1:nb] = b), [description = "Numerator coefficients of transfer function (e.g., z - 1 is specified as [1,-1])"]
+        (a[1:na] = a), [description = "Denominator coefficients of transfer function (e.g., z^2 - 0.78z + 0.37 is specified as [1, -0.78, 0.37])"]
+    end
+    a = collect(a)
+    b = collect(b)
+    systems = @named begin
+        input = RealInput()
+        output = RealOutput()
+    end
+    @variables begin
+        (u(t) = 0.0), [description = "Input flowing through connector `input`"]
+        (y(t) = 0.0), [description = "Output flowing through connector `output`"]
+    end
+    equations = [
+        sum(y(z-k+1) * a[k] for k in 1:na) ~ sum(u(z-k+1) * b[k] for k in 1:nb)
+        input.u ~ u
+        output.u ~ y
+    ]
+    return compose(ODESystem(equations, t, [y,u], [b; a]; name), systems)
+end
+
+DiscreteTransferFunction(b, a; kwargs...) = DiscreteTransferFunction(; b, a, kwargs...)
+
 # @mtkmodel DiscreteTransferFunction begin
 #     @parameters begin
-#         b = [1], [description = "Numerator coefficients of transfer function (e.g., z - 1 is specified as [1,-1])"]
-#         a = [1], [description = "Denominator coefficients of transfer function (e.g., z^2 - 0.78z + 0.37 is specified as [1, -0.78, 0.37])"]
+#         b[1:1] = [1], [description = "Numerator coefficients of transfer function (e.g., z - 1 is specified as [1,-1])"]
+#         a[1:1] = [1], [description = "Denominator coefficients of transfer function (e.g., z^2 - 0.78z + 0.37 is specified as [1, -0.78, 0.37])"]
 #     end
 #     @structural_parameters begin
 #         verbose = true
-# Ts = SampleTime()
-# z = ShiftIndex()
+#         Ts = SampleTime()
+#         z = ShiftIndex()
 #     end
 #     begin
-#         na = length(a)
-#         nb = length(b)
+#         @show na = length(a)
+#         @show nb = length(b)
+#         @show a
 #         verbose && nb > na && @warn "DiscreteTransferFunction: Numerator degree is larger than denominator degree, this is not a proper transfer function. Simulation of a model including this transfer funciton will require at least $(nb-na) samples additional delay in series. Silence this warning with verbose=false"
-#         Ts = SampleTime()
 #     end
 #     @components begin
 #         input = RealInput()
@@ -753,7 +785,7 @@ See also [ControlSystemsMTK.jl](https://juliacontrol.github.io/ControlSystemsMTK
 #     end
 # end
 
-# DiscreteTransferFunction(b, a; kwargs...) = DiscreteTransferFunction(; b, a, kwargs...)
+# 
 
 ##
 

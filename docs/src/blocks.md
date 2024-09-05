@@ -9,6 +9,7 @@
 - [`Difference`](@ref)
 - [`DiscreteDerivative`](@ref)
 - [`DiscreteIntegrator`](@ref)
+- [`DiscreteTransferFunction`](@ref)
 - [`Sampler`](@ref)
 - [`ZeroOrderHold`](@ref)
 
@@ -24,6 +25,7 @@
 
 ## Discrete-time filters
 - [`ExponentialFilter`](@ref)
+- [`DiscreteTransferFunction`](@ref)
 
 
 ## Docstrings
