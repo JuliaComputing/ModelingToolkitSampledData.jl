@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Sliding-mode control · ModelingToolkitSampledData.jl</title><meta name="title" content="Sliding-mode control · ModelingToolkitSampledData.jl"/><meta property="og:title" content="Sliding-mode control · ModelingToolkitSampledData.jl"/><meta property="twitter:title" content="Sliding-mode control · ModelingToolkitSampledData.jl"/><meta name="description" content="Documentation for ModelingToolkitSampledData.jl."/><meta property="og:description" content="Documentation for ModelingToolkitSampledData.jl."/><meta property="twitter:description" content="Documentation for ModelingToolkitSampledData.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">ModelingToolkitSampledData.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../../tutorials/SampledData/">Getting started with Sampled-Data Systems</a></li><li><a class="tocitem" href="../../tutorials/noise/">Noise and measurement corruption</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../dc_motor_pi/">Controlled DC motor</a></li><li><a class="tocitem" href="../onoffcontroller/">On-off controller</a></li><li class="is-active"><a class="tocitem" href>Sliding-mode control</a></li></ul></li><li><a class="tocitem" href="../../blocks/">Library API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Sliding-mode control</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Sliding-mode control</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaComputing/ModelingToolkitSampledData.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Sliding-mode-control"><a class="docs-heading-anchor" href="#Sliding-mode-control">Sliding-mode control</a><a id="Sliding-mode-control-1"></a><a class="docs-heading-anchor-permalink" href="#Sliding-mode-control" title="Permalink"></a></h1><p>This example demonstrates how to model a system with a discrete-time sliding-mode controller using ModelingToolkit. The system consists of a second-order plant with a disturbance and a super-twisting sliding-mode controller. The controller is implemented as a discrete-time system, and the plant is modeled as a continuous-time system. </p><p>When designing an SMC controller, we must choose a <em>switching function</em> <span>$σ$</span> that produces the sliding variable <span>$s = σ(x, p, t)$</span>. The sliding surface <span>$s=0$</span> must be chosen such that the sliding variable <span>$s$</span> exhibits desireable properties, i.e., converges to the desired state with stable dynamics. The control law is chosen to drive the system from any state <span>$x : s ≠ 0$</span> to the sliding surface <span>$s=0$</span>. The sliding surface is commonly chosen as an asymptotically stable system with order equal to the <span>$n_x-n_u$</span>, where <span>$n_x$</span> is the dimension of the state in the system to be controlled, and <span>$n_u$</span> is the number of inputs.</p><p>Since the dynamics in this example is of relative degree <span>$r=2$</span>, we will choose a switching surface corresponding to a stable first-order system (<span>$r-1=1$</span>). We will choose the system</p><p class="math-container">\[ė = -e\]</p><p>which yields the switching variable <span>$s = ė + e$</span>, encoded in the function <span>$s = σ(x, t)$</span></p><pre><code class="language-julia hljs">using ModelingToolkit, ModelingToolkitSampledData, OrdinaryDiffEq, Plots
+using ModelingToolkit: t_nounits as t, D_nounits as D
+using ModelingToolkitStandardLibrary.Blocks
+using JuliaSimCompiler
+dt = 0.01
+clock = Clock(dt)
+z = ShiftIndex(clock)
+
+qr(t) = 1sin(2t)  # reference position
+qdr(t) = 2cos(2t) # reference velocity
+
+function σ(x, t)
+    q, qd = x
+    e = q - qr(t)
+    ė = qd - qdr(t)
+    ė + e
+end
+
+@register_symbolic σ(x, t::Real)
+
+@mtkmodel SuperTwistingSMC begin
+    @structural_parameters begin
+        z = ShiftIndex()
+        Ts = SampleTime()
+        nin
+    end
+    @components begin
+        input = RealInput(; nin)
+        output = RealOutput()
+    end
+    @parameters begin
+        k = 1,    [description = &quot;Control gain&quot;]
+        k2 = 1.1, [description = &quot;Tuning parameter, often set to 1.1&quot;]
+    end
+    @variables begin
+        s(t) = 0.0, [description = &quot;Sliding surface&quot;]
+        p(t) = 0.0
+        y(t) = 0.0, [description = &quot;Control signal output&quot;]
+        x(t) = 0.0
+        xd(t) = 0.0
+    end
+    @equations begin
+        s(z) ~ σ(input.u, t)
+        p  ~ -√(k*abs(s))*sign(s)
+        xd ~ -k2*k*sign(s)
+        x(z) ~ x(z-1) + Ts*xd # Fwd Euler integration
+        y ~ p + x
+        output.u ~ y
+    end
+end
+
+
+@mtkmodel ClosedLoopModel begin
+    @components begin
+        plant = SecondOrder(;)
+        zoh = ZeroOrderHold()
+        controller = SuperTwistingSMC(nin = 2, k=50)
+    end
+    @variables begin
+        disturbance(t) = 0.0
+    end
+    @equations begin
+        controller.input.u ~ [Sample(dt)(plant.x), Sample(dt)(plant.xd)]
+        disturbance ~ 2 + 2sin(3t) + sin(5t)
+        connect(controller.output, zoh.input)
+        zoh.output.u + disturbance ~ plant.input.u
+    end
+end
+@named m = ClosedLoopModel()
+m = complete(m)
+ssys = structural_simplify(IRSystem(m))
+prob = ODEProblem(ssys, [m.plant.x =&gt; -1, m.plant.xd =&gt; 0, m.controller.x(z-1) =&gt; 0], (0.0, 2π))
+sol = solve(prob, Tsit5(), dtmax=0.01)
+figy = plot(sol, idxs=[m.plant.x])
+plot!(sol.t, qr.(sol.t), label=&quot;Reference&quot;)
+figu = plot(sol, idxs=[m.zoh.y, m.disturbance], label=[&quot;Control signal&quot; &quot;Disturbance&quot;])
+plot(figy, figu, layout=(2,1))</code></pre><img src="33dd9d79.svg" alt="Example block output"/><p>The simulation indicates that the controller is able to track the reference signal despite the presence of the disturbance. The control signal exhibits a small degree of high-frequency chattering, a common characteristic of sliding-mode controllers.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../onoffcontroller/">« On-off controller</a><a class="docs-footer-nextpage" href="../../blocks/">Library API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.7.0 on <span class="colophon-date" title="Thursday 5 September 2024 05:42">Thursday 5 September 2024</span>. Using Julia version 1.10.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
