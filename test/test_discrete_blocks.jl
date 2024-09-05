@@ -386,11 +386,11 @@ end
 # end*
 
 ##
-@testset "SlweRateLimiter" begin
-    @info "Testing SlweRateLimiter"
+@testset "SlewRateLimiter" begin
+    @info "Testing SlewRateLimiter"
     cl = Clock(0.1)
     z = ShiftIndex(cl)
-    @mtkmodel SlweRateLimiterModel begin
+    @mtkmodel SlewRateLimiterModel begin
         @components begin
             input = Sine(amplitude=1, frequency=0.8)
             limiter = DiscreteSlewRateLimiter(; z, rate=0.4, rate_negative = 0.3)
@@ -403,12 +403,12 @@ end
             D(x) ~ 0.1x + Hold(limiter.y)
         end
     end
-    @named m = SlweRateLimiterModel()
+    @named m = SlewRateLimiterModel()
     m = complete(m)
     ssys = structural_simplify(IRSystem(m))
     prob = ODEProblem(ssys, [m.limiter.y(z-1) => 0], (0.0, 2.0))
     sol = solve(prob, Tsit5(), dtmax=0.01)
-    plot(sol, idxs=[m.input.output.u, m.limiter.y], title="Slew rate limited sine wave")
+    # plot(sol, idxs=[m.input.output.u, m.limiter.y], title="Slew rate limited sine wave")
     @test maximum(diff(sol[m.limiter.y])) ≈ 0.4
     @test minimum(diff(sol[m.limiter.y])) ≈ -0.3
 end
