@@ -164,11 +164,9 @@ let (; c2d, tf, feedback, lsim) = CS
     G = feedback(C, P)
     res = lsim(G, (x, t) -> [0.5], timevec)
     y = res.y[:]
-    @test_skip begin
-        @test_broken sol(timevec .+ 1e-10, idxs = model.plant.input.u)≈y rtol=1e-8 # Broken due to discrete observed
-        # plot([y sol(timevec .+ 1e-12, idxs=model.plant.input.u)], lab=["CS" "MTK"])
-        plot(timevec, [y sol(timevec .+ 1e-12, idxs = model.controller.u)[:]], m = :o, lab = ["CS" "MTK"])
-    end
+    @test sol(timevec, idxs = model.plant.input.u)≈y rtol=1e-8 
+    # plot([y sol(timevec, idxs=model.plant.input.u).u], lab=["CS" "MTK"])
+    # plot(timevec, [y sol(timevec, idxs = model.controller.u)[:]], m = :o, lab = ["CS" "MTK"])
 end
 # ==============================================================================
 ## DiscretePIDStandard
@@ -183,7 +181,7 @@ k = ShiftIndex()
         sampler = Sampler(; dt)
         zoh = ZeroOrderHold()
         controller = DiscretePIDStandard(
-            K = 2, Ti = 1, Imethod = :forward, with_D = false)
+            K = 2, Ti = 1, Imethod = :backward, with_D = false)
         ref = Constant(k = 0.5)
     end
     @equations begin
@@ -226,16 +224,14 @@ let (; c2d, tf, feedback, lsim) = CS
     # plot(timevec, [y sol(timevec, idxs = model.plant.output.u)[:]], m = :o, lab = ["CS" "MTK"])
     # display(current())
 
-    @test_broken sol(timevec, idxs = model.plant.output.u)[:]≈y rtol=1e-6
+    @test sol(timevec, idxs = model.plant.output.u)[:]≈y rtol=1e-6
 
-    @test_skip begin
-        # Test the output of the discrete partition
-        G = feedback(C, P)
-        res = lsim(G, (x, t) -> [0.5], timevec)
-        y = res.y[:]
-        @test_broken sol(timevec .+ 1e-10, idxs = model.controller.output.u)≈y rtol=1e-8 # Broken due to discrete observed
-        # plot([y sol(timevec .+ 1e-12, idxs=model.controller.output.u)], lab=["CS" "MTK"])
-    end
+    # Test the output of the discrete partition
+    G = feedback(C, P)
+    res = lsim(G, (x, t) -> [0.5], timevec)
+    y = res.y[:]
+    @test_broken sol(timevec, idxs = model.controller.u)≈y rtol=1e-8 # Broken due to LLVM error: ERROR: KeyError: key shift(controller₊I, -1, false, nothing) not found
+    # plot([y sol(timevec .+ 1e-12, idxs=model.controller.u).u], lab=["CS" "MTK"])
 end
 # ==============================================================================
 ## Delay
