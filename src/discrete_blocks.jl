@@ -878,6 +878,70 @@ See also [ControlSystemsMTK.jl](https://juliacontrol.github.io/ControlSystemsMTK
 #     compose(ODESystem(eqs, t, sts, pars; name = name), input, output)
 # end
 
+
+"""
+    DiscreteSlewRateLimiter(rate = 1.0, rate_negative = rate)
+
+A discrete-time slew rate limiter that limits the rate of change of the input signal.
+
+Note, the sample interval is not taken into account when computing the rate of change, the difference between two consequetive samples is saturated.
+
+# Parameters:
+- `rate`: Slew rate limit (in positive/increasing direction). Must be a positive number.
+- `rate_negative`: Negative slew rate limit, defaults to `rate`. Must be a positive number.
+
+# Variables
+- `d`: Unsaturated rate of change of the input signal
+- `u`: Input signal
+- `y`: Output signal (saturated slew rate)
+
+# Connectors:
+- `input`
+- `output`
+
+# Example
+```
+cl = Clock(0.1)
+z = ShiftIndex(cl)
+@mtkmodel SlweRateLimiterModel begin
+    @components begin
+        input = Sine(amplitude=1, frequency=0.8)
+        limiter = DiscreteSlewRateLimiter(; z, rate=0.4, rate_negative = 0.3)
+    end
+    @variables begin
+        x(t) = 0 # Dummy variable to workaround JSCompiler bug
+    end
+    @equations begin
+        connect(input.output, limiter.input)
+        D(x) ~ 0.1x + Hold(limiter.y)
+    end
+end
+@named m = SlweRateLimiterModel()
+m = complete(m)
+ssys = structural_simplify(IRSystem(m))
+prob = ODEProblem(ssys, [m.limiter.y(z-1) => 0], (0.0, 2.0))
+sol = solve(prob, Tsit5(), dtmax=0.01)
+plot(sol, idxs=[m.input.output.u, m.limiter.y], title="Slew rate limited sine wave")
+```
+"""
+@mtkmodel DiscreteSlewRateLimiter begin
+    @extend u, y = siso = SISO()
+    @structural_parameters begin
+        z = ShiftIndex()
+    end
+    @parameters begin
+        rate = 1.0, [description = "Slew rate limit"]
+        rate_negative = rate, [description = "Negative slew rate limit"]
+    end
+    @variables begin
+        d(t)
+    end
+    @equations begin
+        d(z) ~ u(z) - y(z-1)
+        y(z) ~ y(z-1) + clamp(d(z), -rate_negative, rate)
+    end
+end
+
 """
     Quantization
 

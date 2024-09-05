@@ -8,7 +8,7 @@ export DiscreteIntegrator, DiscreteDerivative, Delay, Difference, ZeroOrderHold,
        ClockChanger,
        DiscretePIDParallel, DiscretePIDStandard, DiscreteStateSpace,
        DiscreteTransferFunction, NormalNoise, UniformNoise, Quantization,
-       ExponentialFilter
+       DiscreteSlewRateLimiter, ExponentialFilter
 export DiscreteOnOffController
 include("discrete_blocks.jl")
 

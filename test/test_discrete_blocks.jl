@@ -385,7 +385,35 @@ end
 #     @test reduce(vcat, sol((0:10) .+ 1e-2))[:]≈[zeros(2); 1; zeros(8)] atol=1e-2
 # end*
 
+##
+@testset "SlweRateLimiter" begin
+    @info "Testing SlweRateLimiter"
+    cl = Clock(0.1)
+    z = ShiftIndex(cl)
+    @mtkmodel SlweRateLimiterModel begin
+        @components begin
+            input = Sine(amplitude=1, frequency=0.8)
+            limiter = DiscreteSlewRateLimiter(; z, rate=0.4, rate_negative = 0.3)
+        end
+        @variables begin
+            x(t) = 0 # Dummy variable to workaround JSCompiler bug
+        end
+        @equations begin
+            connect(input.output, limiter.input)
+            D(x) ~ 0.1x + Hold(limiter.y)
+        end
+    end
+    @named m = SlweRateLimiterModel()
+    m = complete(m)
+    ssys = structural_simplify(IRSystem(m))
+    prob = ODEProblem(ssys, [m.limiter.y(z-1) => 0], (0.0, 2.0))
+    sol = solve(prob, Tsit5(), dtmax=0.01)
+    plot(sol, idxs=[m.input.output.u, m.limiter.y], title="Slew rate limited sine wave")
+    @test maximum(diff(sol[m.limiter.y])) ≈ 0.4
+    @test minimum(diff(sol[m.limiter.y])) ≈ -0.3
+end
 
+##
 @testset "quantization" begin
     @info "Testing quantization"
 
