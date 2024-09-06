@@ -518,7 +518,7 @@ end
 
 @testset "sampling with AD effects" begin
     @info "Testing sampling with AD effects"
-
+    z = ShiftIndex()
     @mtkmodel PracticalSamplerModel begin
         @components begin
             input = Sine(amplitude=1.2, frequency=1, smooth=false)
