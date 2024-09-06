@@ -539,3 +539,30 @@ end
     @test sol(1.1, idxs=m.filter.y) > 0
 
 end
+
+@testset "sampling with AD effects" begin
+    @info "Testing sampling with AD effects"
+    z = ShiftIndex()
+    @mtkmodel PracticalSamplerModel begin
+        @components begin
+            input = Sine(amplitude=1.2, frequency=1, smooth=false)
+            sampling = SampleWithADEffects(; dt=0.03, bits=3, y_min = -1, y_max = 1, sigma = 0.1, noisy = true, quantized=true, midrise=true)
+        end
+        @variables begin
+            x(t) = 0 # Dummy variable to work around a bug for models without continuous-time state
+        end
+        @equations begin
+            connect(input.output, sampling.input)
+            D(x) ~ Hold(sampling.y) # Dummy equation
+        end
+    end
+    @named m = PracticalSamplerModel()
+    m = complete(m)
+    ssys = structural_simplify(IRSystem(m))
+    prob = ODEProblem(ssys, [m.sampling.noise.y(z-1) => 0], (0.0, 2.0))
+    sol = solve(prob, Tsit5())
+    
+    @test length(unique(sol[m.sampling.y])) == 8
+    @test maximum(abs, sol(0:0.03:1, idxs=m.sampling.y) - sol(0:0.03:1, idxs=m.sampling.u)) < 0.3
+
+end

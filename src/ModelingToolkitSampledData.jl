@@ -5,7 +5,7 @@ using StableRNGs
 
 export get_clock
 export DiscreteIntegrator, DiscreteDerivative, Delay, Difference, ZeroOrderHold, Sampler,
-       ClockChanger,
+       ClockChanger, SampleWithADEffects,
        DiscretePIDParallel, DiscretePIDStandard, DiscreteStateSpace,
        DiscreteTransferFunction, NormalNoise, UniformNoise, Quantization,
        DiscreteSlewRateLimiter, ExponentialFilter

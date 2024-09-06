@@ -117,6 +117,7 @@ z = ShiftIndex(Clock(0.1))
     @equations begin
         connect(input.output, quant.input)
         D(x) ~ 0 # Dummy equation
+        # D(x) ~ Hold(quant.y) # Dummy equation
     end
 end
 @named m = QuantizationModel()
@@ -147,3 +148,38 @@ plot(u, [y_mr y_mt], label=["Midrise" "Midtread"], xlabel="Input", ylabel="Outpu
 Note how the default mid-rise quantizer mode has a rise at the middle of the interval, while the mid-tread mode has a flat region (a tread) centered around the middle of the interval.
 
 The default option `midrise = true` includes both end points as possible output values, while `midrise = false` does not include the upper limit.
+
+
+## Sampling with AD effects
+The block [`SampleWithADEffects`](@ref) combines an ideal [`Sampler`](@ref), a [`NormalNoise](@ref) and a [`Quantization`](@ref) block to simulate the undesirable but practically occurring effects of sampling, noise and quantization in an AD converter. The block has the connectors `input` and `output`, where the input is the continuous-time signal to be sampled, and the output is the quantized, noisy signal. Example:
+
+```@example QUANT
+@mtkmodel PracticalSamplerModel begin
+    @components begin
+        input = Sine(amplitude=1.2, frequency=1, smooth=false)
+        sampling = SampleWithADEffects(; dt=0.03, bits=3, y_min = -1, y_max = 1, sigma = 0.1, noisy = true, quantized=true, midrise=true)
+    end
+    @variables begin
+        x(t) = 0 # Dummy variable to work around a bug for models without continuous-time state
+    end
+    @equations begin
+        connect(input.output, sampling.input)
+        D(x) ~ Hold(sampling.y) # Dummy equation
+    end
+end
+@named m = PracticalSamplerModel()
+m = complete(m)
+ssys = structural_simplify(IRSystem(m))
+prob = ODEProblem(ssys, [m.sampling.noise.y(z-1) => 0], (0.0, 2.0))
+sol = solve(prob, Tsit5())
+plot(sol, idxs=m.input.output.u)
+plot!(sol, idxs=m.sampling.y, label="AD converted output")
+```
+
+Both quantization and noise addition are optional and turned off by default. In the example above, we turn them on with keywords `noisy = true` and `quantized = true`. The noise is Gaussian white noise with standard deviation `sigma`, and the quantization is a 3-bit midrise quantizer (8 output levels) with limits `y_min` and `y_max`. Limits have to be provided when quantization is used. The `dt` parameter is the sampling time, if left unspecified, it will be inferred from context.
+
+Things to notice in the plot:
+- The sampled signal is saturated at the quantization limits ±1.
+- The noise is added to the signal before quantization, which means that the sampled signal has ``2^\text{bits}`` distinct output levels only.
+- 0 is not a possible output value. In situations where 0 is an important value (such as in the presence of integration of a quantized value that is expected to be close to 0), the mid-tread quantizer should be used instead by passing `midrise = false`.
+
