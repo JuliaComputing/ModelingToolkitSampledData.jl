@@ -194,6 +194,9 @@ end
 Internal function. This function seeds the seed parameter as well as the current simulation time.
 """
 function seeded_randn(seed, t)
+    if rand() < 0.1
+        @show t
+    end
     rng = StableRNGs.StableRNG(hash(t, hash(seed)))
     randn(rng)
 end
