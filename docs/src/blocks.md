@@ -16,6 +16,7 @@
 ## Noise and measurement corruption
 - [`NormalNoise`](@ref)
 - [`Quantization`](@ref)
+- [`SampleWithADEffects`](@ref)
 - [`UniformNoise`](@ref)
 
 ## Controllers
@@ -25,6 +26,7 @@
 
 ## Discrete-time filters
 - [`ExponentialFilter`](@ref)
+- [`MovingAverageFilter`](@ref)
 
 
 ## Docstrings
