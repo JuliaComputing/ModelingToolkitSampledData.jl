@@ -9,6 +9,7 @@
 - [`Difference`](@ref)
 - [`DiscreteDerivative`](@ref)
 - [`DiscreteIntegrator`](@ref)
+- [`DiscreteSlewRateLimiter`](@ref)
 - [`Sampler`](@ref)
 - [`ZeroOrderHold`](@ref)
 
