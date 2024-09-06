@@ -1010,7 +1010,7 @@ end
 """
     ExponentialFilter(a = 0.1)
 
-Exponential filtering (first-order filter) with input-output relation ``y(z) ~ (1 - a) y(z-1) + a u(z-1)``, transfer function
+Exponential filtering (first-order filter) with input-output relation ``y(z) = (1 - a) y(z-1) + a u(z-1)``, transfer function
 ```math
 Y(z) = \\dfrac{a}{1 - (1 - a) z^{-1}} U(z)
 ```
@@ -1042,7 +1042,7 @@ end
 """
     MovingAverageFilter(N = 3)
 
-Exponential filtering with input-output relation ``y(z) ~ sum(u(z-i) for i in 0:N-1) / N``.
+Exponential filtering with input-output relation ``y(z) = sum(u(z-i) for i in 0:N-1) / N``.
 
 Please note: this implementation of a moving average filter is not optimized for very large number of filter taps `N`.
 
