@@ -1,7 +1,7 @@
 name = "ModelingToolkitSampledData"
 uuid = "2363c322-4785-4cde-be74-4d9c1119527e"
 authors = ["Fredrik Bagge Carlson"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 DiffEqCallbacks = "459566f4-90b8-5000-8ac3-15dfb0a30def"
