@@ -1,7 +1,7 @@
 # ModelingToolkitSampledData
 
 > [!TIP]
->  To be presented at JuliaCon 2024. https://pretalx.com/juliacon2024/talk/KGAKA8/
+>  Presented at JuliaCon 2024: https://www.youtube.com/watch?v=wL-jYQ_O9Nc
 
 [![Build Status](https://github.com/JuliaComputing/ModelingToolkitSampledData.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/JuliaComputing/ModelingToolkitSampledData.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliacomputing.github.io/ModelingToolkitSampledData.jl/stable/)
