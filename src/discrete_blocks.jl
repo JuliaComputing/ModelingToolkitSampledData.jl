@@ -627,7 +627,7 @@ To use the controller in 1DOF mode, i.e., with only the control error as input, 
             I(z) ~ 0
         end
         if with_D
-            wde = wd * r - y
+            wde ~ wd * r - y
             if Dmethod === :forward
                 D(z) ~ (Td - Nd * Ts) / Td * D(z - 1) + Nd * (wde(z) - wde(z - 1))
             elseif Dmethod === :backward

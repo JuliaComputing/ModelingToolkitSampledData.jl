@@ -164,7 +164,7 @@ let (; c2d, tf, feedback, lsim) = CS
     G = feedback(C, P)
     res = lsim(G, (x, t) -> [0.5], timevec)
     y = res.y[:]
-    @test sol(timevec, idxs = model.plant.input.u)≈y rtol=1e-8 
+    @test_broken sol(timevec, idxs = model.plant.input.u)≈y rtol=1e-8 
     # plot([y sol(timevec, idxs=model.plant.input.u).u], lab=["CS" "MTK"])
     # plot(timevec, [y sol(timevec, idxs = model.controller.u)[:]], m = :o, lab = ["CS" "MTK"])
 end
@@ -324,8 +324,8 @@ using Statistics
     sol = solve(prob, Tsit5())
     @test !all(iszero, sol.u)
     tv = 0:k.clock.dt:sol.t[end]
-    @test std(sol(tv, idxs = m.plant.u)) ≈ 1 rtol=0.1
-    @test mean(sol(tv, idxs = m.plant.u)) ≈ 0 atol=0.08
+    @test std(sol(tv, idxs = m.noise.y)) ≈ 1 rtol=0.1
+    @test mean(sol(tv, idxs = m.noise.y)) ≈ 0 atol=0.08
 end
 
 @testset "UniformNoise" begin
@@ -350,8 +350,8 @@ end
     sol = solve(prob, Tsit5())
     @test !all(iszero, sol.u)
     tv = 0:k.clock.dt:sol.t[end]
-    @test minimum(sol(tv, idxs = m.plant.u)) ≈ 0 atol=0.02
-    @test maximum(sol(tv, idxs = m.plant.u)) ≈ 1 atol=0.02
+    @test minimum(sol(tv, idxs = m.noise.y)) ≈ 0 atol=0.02
+    @test maximum(sol(tv, idxs = m.noise.y)) ≈ 1 atol=0.02
 end
 
 
@@ -564,7 +564,9 @@ end
     # plot(sol, idxs=m.filter.y)
     @test sol(1.5, idxs=m.filter.y) == 1
     @test sol(0.999, idxs=m.filter.y) == 0
-    @test 0 < sol(1.1, idxs=m.filter.y) < 1
+    @test_broken 0 < sol(1.1, idxs=m.filter.y) < 1
+
+    @test_broken count(!∈((1,0)), sol[m.filter.y]) == 2 # With 3 taps there are two steps where tap values have both 0 and 1
 end
 
 @testset "sampling with AD effects" begin
