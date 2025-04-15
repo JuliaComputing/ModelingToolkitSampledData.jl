@@ -7,7 +7,7 @@ where ``τ = 100`` is a time constant. The controller ``u = f(x)`` is an on/off 
 
 
 ```@example ONOFF
-using ModelingToolkit, ModelingToolkitSampledData, OrdinaryDiffEq, Plots
+using ModelingToolkit, ModelingToolkitSampledData, OrdinaryDiffEqTsit5, Plots
 using ModelingToolkit: t_nounits as t, D_nounits as D
 using ModelingToolkitStandardLibrary.Blocks
 using JuliaSimCompiler

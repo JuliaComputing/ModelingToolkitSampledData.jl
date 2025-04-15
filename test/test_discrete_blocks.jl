@@ -1,8 +1,8 @@
 using ModelingToolkitSampledData
-using ModelingToolkit, ModelingToolkitStandardLibrary, OrdinaryDiffEq
+using ModelingToolkit, ModelingToolkitStandardLibrary, OrdinaryDiffEqTsit5
 using ModelingToolkitStandardLibrary.Blocks
 using ModelingToolkit: t_nounits as t, D_nounits as D
-using OrdinaryDiffEq: ReturnCode.Success
+using OrdinaryDiffEqTsit5: ReturnCode.Success
 using JuliaSimCompiler
 using Test
 Difference = ModelingToolkitSampledData.Difference
@@ -56,7 +56,7 @@ end
     sys = structural_simplify(IRSystem(model))
     prob = ODEProblem(sys, Pair[int.x(k - 1) => 1
                                 int.u(k - 1) => 0], (0.0, 1.0))
-    sol = solve(prob, Rodas4())
+    sol = solve(prob, Tsit5())
     @test sol.retcode == Success
     @test_skip sol.prob.kwargs[:disc_saved_values][1].t ≈ 0:sampletime(clock):1
     @test sol[model.int.x] ≈ range(1.1, step = sampletime(clock), length = 11)
@@ -73,7 +73,7 @@ end
     sys = structural_simplify(IRSystem(model))
     prob = ODEProblem(sys, Pair[int.x(k - 1) => 1
                                 int.u(k - 1) => 0], (0.0, 1.0))
-    sol = solve(prob, Rodas4())
+    sol = solve(prob, Tsit5())
     @test sol.retcode == Success
     @test_skip sol.prob.kwargs[:disc_saved_values][1].t ≈ 0:sampletime(clock):1
     @test sol[model.int.x] ≈
@@ -91,7 +91,7 @@ end
     sys = structural_simplify(IRSystem(model))
     prob = ODEProblem(sys, Pair[int.x(k - 1) => 1
                                 int.u(k - 1) => 0], (0.0, 1.0))
-    sol = solve(prob, Rodas4())
+    sol = solve(prob, Tsit5())
     @test sol.retcode == Success
     @test_skip sol.prob.kwargs[:disc_saved_values][1].t ≈ 0:sampletime(clock):1
     @test sol[model.int.x] ≈

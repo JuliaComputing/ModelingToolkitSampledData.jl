@@ -20,7 +20,7 @@ using ModelingToolkit: t_nounits as t
 using ModelingToolkitStandardLibrary.Electrical
 using ModelingToolkitStandardLibrary.Mechanical.Rotational
 using ModelingToolkitStandardLibrary.Blocks
-using OrdinaryDiffEq
+using OrdinaryDiffEqTsit5
 using Plots
 
 R = 0.5 # [Ohm] armature resistance
