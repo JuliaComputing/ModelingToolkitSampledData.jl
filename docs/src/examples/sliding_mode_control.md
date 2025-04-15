@@ -13,7 +13,7 @@ which yields the switching variable ``s = ė + e``, encoded in the function ``s
 using ModelingToolkit, ModelingToolkitSampledData, OrdinaryDiffEqTsit5, Plots
 using ModelingToolkit: t_nounits as t, D_nounits as D
 using ModelingToolkitStandardLibrary.Blocks
-using JuliaSimCompiler
+using SynchToolkit
 dt = 0.01
 clock = Clock(dt)
 z = ShiftIndex(clock)
@@ -80,7 +80,7 @@ end
 end
 @named m = ClosedLoopModel()
 m = complete(m)
-ssys = structural_simplify(IRSystem(m))
+ssys = structural_simplify(m; additional_passes=[SynchToolkit.compile_lustre])
 prob = ODEProblem(ssys, [m.plant.x => -1, m.plant.xd => 0, m.controller.x(z-1) => 0], (0.0, 2π))
 sol = solve(prob, Tsit5(), dtmax=0.01)
 figy = plot(sol, idxs=[m.plant.x])

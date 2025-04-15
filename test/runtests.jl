@@ -1,6 +1,6 @@
 using ModelingToolkitSampledData
 using ModelingToolkit
-using JuliaSimCompiler
+using SynchToolkit
 using Test
 
 @testset "ModelingToolkitSampledData.jl" begin

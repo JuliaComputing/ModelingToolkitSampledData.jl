@@ -14,7 +14,7 @@ using ModelingToolkitStandardLibrary.Electrical
 using ModelingToolkitStandardLibrary.Mechanical.Rotational
 using ModelingToolkitStandardLibrary.Blocks
 using ModelingToolkitSampledData
-using JuliaSimCompiler
+using SynchToolkit
 using OrdinaryDiffEq
 using Plots
 
@@ -72,7 +72,7 @@ end
 
 @named noisy_model = NoisyClosedLoop()
 noisy_model = complete(noisy_model)
-ssys = structural_simplify(IRSystem(noisy_model)) # Conversion to an IRSystem from JuliaSimCompiler is required for sampled-data systems
+ssys = structural_simplify(noisy_model; additional_passes=[SynchToolkit.compile_lustre])
 
 noise_prob = ODEProblem(ssys, [unknowns(noisy_model) .=> 0.0; noisy_model.pi_controller.I(z-1) => 0; noisy_model.pi_controller.eI(z-1) => 0; noisy_model.noise.y(z-1) => 0], (0, 2.0))
 noise_sol = solve(noise_prob, Tsit5())
@@ -105,7 +105,7 @@ A signal may be quantized to a fixed number of levels (e.g., 8-bit) using the [`
 using ModelingToolkit, ModelingToolkitSampledData, OrdinaryDiffEq, Plots
 using ModelingToolkit: t_nounits as t, D_nounits as D
 using ModelingToolkitStandardLibrary.Blocks
-using JuliaSimCompiler
+
 z = ShiftIndex(Clock(0.1))
 @mtkmodel QuantizationModel begin
     @components begin
@@ -123,7 +123,7 @@ z = ShiftIndex(Clock(0.1))
 end
 @named m = QuantizationModel()
 m = complete(m)
-ssys = structural_simplify(IRSystem(m))
+ssys = structural_simplify(m; additional_passes=[SynchToolkit.compile_lustre])
 prob = ODEProblem(ssys, [], (0.0, 2.0))
 sol = solve(prob, Tsit5())
 plot(sol, idxs=m.input.output.u)
@@ -170,7 +170,7 @@ The block [`SampleWithADEffects`](@ref) combines an ideal [`Sampler`](@ref), a [
 end
 @named m = PracticalSamplerModel()
 m = complete(m)
-ssys = structural_simplify(IRSystem(m))
+ssys = structural_simplify(m; additional_passes=[SynchToolkit.compile_lustre])
 prob = ODEProblem(ssys, [m.sampling.noise.y(z-1) => 0], (0.0, 2.0))
 sol = solve(prob, Tsit5())
 plot(sol, idxs=m.input.output.u)
