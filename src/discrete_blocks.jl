@@ -1042,7 +1042,7 @@ end
 """
     MovingAverageFilter(N = 3)
 
-Exponential filtering with input-output relation ``y(z) = \\dfrac{1}{N} \\sum_{i=0}^{N-1} u(z-i)``.
+Moving-average filtering with input-output relation ``y(z) = \\dfrac{1}{N} \\sum_{i=0}^{N-1} u(z-i)``.
 
 Please note: this implementation of a moving average filter is not optimized for very large number of filter taps `N`.
 
