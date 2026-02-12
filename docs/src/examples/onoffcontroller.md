@@ -7,10 +7,10 @@ where ``τ = 100`` is a time constant. The controller ``u = f(x)`` is an on/off 
 
 
 ```@example ONOFF
-using ModelingToolkit, ModelingToolkitSampledData, OrdinaryDiffEq, Plots
+using ModelingToolkit, ModelingToolkitSampledData, OrdinaryDiffEqTsit5, Plots
 using ModelingToolkit: t_nounits as t, D_nounits as D
 using ModelingToolkitStandardLibrary.Blocks
-using JuliaSimCompiler
+using SynchToolkit
 cl = Clock(1)
 z = ShiftIndex(cl)
 @mtkmodel OnOffModel begin
@@ -29,7 +29,7 @@ z = ShiftIndex(cl)
 end
 @named m = OnOffModel()
 m = complete(m)
-ssys = structural_simplify(IRSystem(m))
+ssys = structural_simplify(m; additional_passes=[SynchToolkit.compile_lustre])
 prob = ODEProblem(ssys, [m.onoff.y(z-1) => 0], (0.0, 40.0))
 sol = solve(prob, Tsit5(), dtmax=0.1)
 plot(sol, idxs=[m.x, m.onoff.y], title="On-off control of an unstable first-order system")

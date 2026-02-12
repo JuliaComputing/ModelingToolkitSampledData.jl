@@ -1,6 +1,6 @@
 module ModelingToolkitSampledData
 using ModelingToolkit
-using JuliaSimCompiler
+using SynchToolkit
 using StableRNGs
 
 export get_clock
@@ -13,7 +13,5 @@ export DiscreteOnOffController
        
 include("discrete_blocks.jl")
 
-
-runtime(ssys::JuliaSimCompiler.ScheduledSystem) = ssys.discrete_info.callback.affect!.affect!.x
 
 end

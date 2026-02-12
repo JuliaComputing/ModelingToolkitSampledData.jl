@@ -343,7 +343,6 @@ end
 """
 @mtkmodel ClockChanger begin
     begin
-        isdefined(Main, :JuliaSimCompiler) || error("JuliaSimCompiler must be defined in the Main module for the ClockChanger component to work. Run `import JuliaSimCompiler`.")
         @warn "The ClockChanger component is experimental and has known correctness issues. Please use with caution."
     end
     @extend u, y = siso = SISO()
@@ -355,7 +354,7 @@ end
         O = 0 # This is just a dummy to workaround a bug in JSComp
     end
     @equations begin
-        y(ShiftIndex(to)) ~ Main.JuliaSimCompiler.ClockChange(; to, from)(u(ShiftIndex(from))) + O
+        y(ShiftIndex(to)) ~ ClockChange(; to, from)(u(ShiftIndex(from))) + O
     end
 end
 
@@ -918,7 +917,7 @@ z = ShiftIndex(cl)
 end
 @named m = SlweRateLimiterModel()
 m = complete(m)
-ssys = structural_simplify(IRSystem(m))
+ssys = structural_simplify(m; additional_passes=[SynchToolkit.compile_lustre])
 prob = ODEProblem(ssys, [m.limiter.y(z-1) => 0], (0.0, 2.0))
 sol = solve(prob, Tsit5(), dtmax=0.01)
 plot(sol, idxs=[m.input.output.u, m.limiter.y], title="Slew rate limited sine wave")

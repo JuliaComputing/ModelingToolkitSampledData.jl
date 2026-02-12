@@ -1,9 +1,9 @@
 using ModelingToolkitSampledData
-using ModelingToolkit, ModelingToolkitStandardLibrary, OrdinaryDiffEq
+using ModelingToolkit, ModelingToolkitStandardLibrary, OrdinaryDiffEqTsit5
 using ModelingToolkitStandardLibrary.Blocks
 using ModelingToolkit: t_nounits as t, D_nounits as D
-using OrdinaryDiffEq: ReturnCode.Success
-using JuliaSimCompiler
+using OrdinaryDiffEqTsit5: ReturnCode.Success
+using SynchToolkit
 using Test
 Difference = ModelingToolkitSampledData.Difference
 
@@ -31,7 +31,7 @@ an integrator with a constant input is often used together with the system under
 
     @named model = TestDiscreteOnly()
     model = complete(model)
-    ssys = structural_simplify(IRSystem(model))
+    ssys = structural_simplify(model; additional_passes=[SynchToolkit.compile_lustre])
     prob = ODEProblem(ssys, [model.x(k-1) => 1.0], (0.0, 10.0))
     sol = solve(prob, Tsit5())
     @test sol[model.x] == dt .^ (1:21)
@@ -53,10 +53,10 @@ end
         t,
         systems = [sampler, int, intc, c])
     model = complete(iosys)
-    sys = structural_simplify(IRSystem(model))
+    sys = structural_simplify(model; additional_passes=[SynchToolkit.compile_lustre])
     prob = ODEProblem(sys, Pair[int.x(k - 1) => 1
                                 int.u(k - 1) => 0], (0.0, 1.0))
-    sol = solve(prob, Rodas4())
+    sol = solve(prob, Tsit5())
     @test sol.retcode == Success
     @test_skip sol.prob.kwargs[:disc_saved_values][1].t ≈ 0:sampletime(clock):1
     @test sol[model.int.x] ≈ range(1.1, step = sampletime(clock), length = 11)
@@ -70,10 +70,10 @@ end
         t,
         systems = [sampler, int, intc, c])
     model = complete(iosys)
-    sys = structural_simplify(IRSystem(model))
+    sys = structural_simplify(model; additional_passes=[SynchToolkit.compile_lustre])
     prob = ODEProblem(sys, Pair[int.x(k - 1) => 1
                                 int.u(k - 1) => 0], (0.0, 1.0))
-    sol = solve(prob, Rodas4())
+    sol = solve(prob, Tsit5())
     @test sol.retcode == Success
     @test_skip sol.prob.kwargs[:disc_saved_values][1].t ≈ 0:sampletime(clock):1
     @test sol[model.int.x] ≈
@@ -88,10 +88,10 @@ end
         t,
         systems = [sampler, int, intc, c])
     model = complete(iosys)
-    sys = structural_simplify(IRSystem(model))
+    sys = structural_simplify(model; additional_passes=[SynchToolkit.compile_lustre])
     prob = ODEProblem(sys, Pair[int.x(k - 1) => 1
                                 int.u(k - 1) => 0], (0.0, 1.0))
-    sol = solve(prob, Rodas4())
+    sol = solve(prob, Tsit5())
     @test sol.retcode == Success
     @test_skip sol.prob.kwargs[:disc_saved_values][1].t ≈ 0:sampletime(clock):1
     @test sol[model.int.x] ≈
@@ -128,7 +128,7 @@ end
 @named model = ClosedLoop()
 model = complete(model)
 # ci, varmap = infer_clocks(expand_connections(model))
-ssys = structural_simplify(IRSystem(model))
+ssys = structural_simplify(model; additional_passes=[SynchToolkit.compile_lustre])
 
 Tf = 5
 timevec = 0:(dt):Tf
@@ -197,7 +197,7 @@ end
 @named model = ClosedLoop()
 model = complete(model)
 # ci, varmap = infer_clocks(expand_connections(model))
-ssys = structural_simplify(IRSystem(model))
+ssys = structural_simplify(model; additional_passes=[SynchToolkit.compile_lustre])
 
 Tf = 5
 timevec = 0:(dt):Tf
@@ -256,7 +256,7 @@ end
 
     @named m = DelayModel()
     m = complete(m)
-    ssys = structural_simplify(IRSystem(m))
+    ssys = structural_simplify(m; additional_passes=[SynchToolkit.compile_lustre])
     prob = ODEProblem(
         ssys, [m.delay.u(k - 3) => 0, m.delay.u(k - 2) => 0, m.delay.u(k - 1) => 0], (
             0.0, 10.0))
@@ -289,7 +289,7 @@ using ModelingToolkitStandardLibrary.Blocks
 
     @named m = DiffModel()
     m = complete(m)
-    ssys = structural_simplify(IRSystem(m))
+    ssys = structural_simplify(m; additional_passes=[SynchToolkit.compile_lustre])
     prob = ODEProblem(ssys, Dict(m.diff.u(k - 1) => 0), (0.0, 10.0))
     sol = solve(prob, Tsit5(), dtmax = 0.01)
     @test reduce(vcat, sol((0:10) .+ 1e-2))[:]≈[zeros(2); 1; zeros(8)] atol=1e-2
@@ -319,7 +319,7 @@ using Statistics
 
     @named m = NoiseModel()
     m = complete(m)
-    ssys = structural_simplify(IRSystem(m))
+    ssys = structural_simplify(m; additional_passes=[SynchToolkit.compile_lustre])
     prob = ODEProblem(ssys, [m.noise.y(k-1) => 0], (0.0, 10.0))
     sol = solve(prob, Tsit5())
     @test !all(iszero, sol.u)
@@ -345,7 +345,7 @@ end
 
     @named m = NoiseModel()
     m = complete(m)
-    ssys = structural_simplify(IRSystem(m))
+    ssys = structural_simplify(m; additional_passes=[SynchToolkit.compile_lustre])
     prob = ODEProblem(ssys, [m.noise.y(k-1) => 0], (0.0, 10.0))
     sol = solve(prob, Tsit5())
     @test !all(iszero, sol.u)
@@ -375,7 +375,7 @@ end
 
 #     @named m = PlantModel()
 #     m = complete(m)
-#     ssys = structural_simplify(IRSystem(m))
+#     ssys = structural_simplify(m; additional_passes=[SynchToolkit.compile_lustre])
 #     prob = ODEProblem(ssys, Dict(m.plant.u(k - 1) => 0), (0.0, 10.0))
 #     sol = solve(prob, Tsit5(), dtmax = 0.01)
 #     @test reduce(vcat, sol((0:10) .+ 1e-2))[:]≈[zeros(2); 1; zeros(8)] atol=1e-2
@@ -401,7 +401,7 @@ end
     end
     @named m = SlewRateLimiterModel()
     m = complete(m)
-    ssys = structural_simplify(IRSystem(m))
+    ssys = structural_simplify(m; additional_passes=[SynchToolkit.compile_lustre])
     prob = ODEProblem(ssys, [m.limiter.y(z-1) => 0], (0.0, 2.0))
     sol = solve(prob, Tsit5(), dtmax=0.01)
     # plot(sol, idxs=[m.input.output.u, m.limiter.y], title="Slew rate limited sine wave")
@@ -457,7 +457,7 @@ end
     end
     @named m = QuantizationModel()
     m = complete(m)
-    ssys = structural_simplify(IRSystem(m))
+    ssys = structural_simplify(m; additional_passes=[SynchToolkit.compile_lustre])
     prob = ODEProblem(ssys, [], (0.0, 10.0))
     sol = solve(prob, Tsit5(), dtmax=0.01)
     y = sol[m.quant.y]
@@ -476,7 +476,7 @@ end
     end
     @named m = QuantizationModel2()
     m = complete(m)
-    ssys = structural_simplify(IRSystem(m))
+    ssys = structural_simplify(m; additional_passes=[SynchToolkit.compile_lustre])
     prob = ODEProblem(ssys, [], (0.0, 10.0))
     sol = solve(prob, Tsit5(), dtmax=0.01)
     y = sol[m.quant.y]
@@ -505,7 +505,7 @@ end
     end
     @named m = OnOffModel()
     m = complete(m)
-    ssys = structural_simplify(IRSystem(m))
+    ssys = structural_simplify(m; additional_passes=[SynchToolkit.compile_lustre])
     prob = ODEProblem(ssys, [m.onoff.y(z-1) => 0], (0.0, 4.0))
     sol = solve(prob, Tsit5(), dtmax=0.1)
     # plot(sol, idxs=[m.x, m.onoff.y], title="On-off control of an unstable first-order system")
@@ -530,7 +530,7 @@ end
     end
     @named m = ExponentialFilterModel()
     m = complete(m)
-    ssys = structural_simplify(IRSystem(m))
+    ssys = structural_simplify(m; additional_passes=[SynchToolkit.compile_lustre])
     prob = ODEProblem(ssys, [m.filter.y(z-1) => 0], (0.0, 10.0))
     sol = solve(prob, Tsit5(), dtmax=0.1)
     @test sol(10, idxs=m.filter.y) ≈ 1 atol=0.001
@@ -558,7 +558,7 @@ end
 
     @named m = MovingAverageFilterModel()
     m = complete(m)
-    ssys = structural_simplify(IRSystem(m))
+    ssys = structural_simplify(m; additional_passes=[SynchToolkit.compile_lustre])
     prob = ODEProblem(ssys, [m.filter.u(z-i) => 0 for i = 0:3], (0.0, 2.0))
     sol = solve(prob, Tsit5(), dtmax=0.1)
     # plot(sol, idxs=m.filter.y)
@@ -587,7 +587,7 @@ end
     end
     @named m = PracticalSamplerModel()
     m = complete(m)
-    ssys = structural_simplify(IRSystem(m))
+    ssys = structural_simplify(m; additional_passes=[SynchToolkit.compile_lustre])
     prob = ODEProblem(ssys, [m.sampling.noise.y(z-1) => 0], (0.0, 2.0))
     sol = solve(prob, Tsit5())
     

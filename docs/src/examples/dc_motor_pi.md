@@ -20,7 +20,7 @@ using ModelingToolkit: t_nounits as t
 using ModelingToolkitStandardLibrary.Electrical
 using ModelingToolkitStandardLibrary.Mechanical.Rotational
 using ModelingToolkitStandardLibrary.Blocks
-using OrdinaryDiffEq
+using OrdinaryDiffEqTsit5
 using Plots
 
 R = 0.5 # [Ohm] armature resistance
@@ -110,7 +110,7 @@ Below, we re-model the system, this time with a discrete-time controller: [`Disc
 
 ```@example dc_motor_pi
 using ModelingToolkitSampledData
-using JuliaSimCompiler
+using SynchToolkit
 
 z = ShiftIndex()
 @mtkmodel DiscreteClosedLoop begin
@@ -159,7 +159,7 @@ end
 
 @named disc_model = DiscreteClosedLoop()
 disc_model = complete(disc_model)
-ssys = structural_simplify(IRSystem(disc_model)) # Conversion to an IRSystem from JuliaSimCompiler is required for sampled-data systems
+ssys = structural_simplify(disc_model; additional_passes=[SynchToolkit.compile_lustre])
 
 disc_prob = ODEProblem(ssys, [unknowns(disc_model) .=> 0.0; disc_model.pi_controller.I(z-1) => 0; disc_model.pi_controller.eI(z-1) => 0], (0, 2.0))
 disc_sol = solve(disc_prob, Tsit5())
@@ -213,7 +213,7 @@ end
 
 @named cascade = Cascade()
 cascade = complete(cascade)
-ssys = structural_simplify(IRSystem(cascade))
+ssys = structural_simplify(cascade; additional_passes=[SynchToolkit.compile_lustre])
 i = cascade.inner
 cascade_prob = ODEProblem(ssys, [
     unknowns(cascade) .=> 0.0;

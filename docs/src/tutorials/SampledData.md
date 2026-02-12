@@ -226,10 +226,11 @@ connections = [r ~ (t >= 5)        # reference signal
 cl = complete(cl)
 ```
 
-We can now simulate the system. JuliaSimCompiler is required to simulate hybrid continuous/discrete systems, we thus convert the system to an `JuliaSimCompiler.IRSystem` before calling `structural_simplify`
+We can now simulate the system.
 ```@example clocks
-using JuliaSimCompiler, Plots
-ssys = structural_simplify(IRSystem(cl))
+using Plots
+using SynchToolkit
+ssys = structural_simplify(cl; additional_passes=[SynchToolkit.compile_lustre])
 
 prob = ODEProblem(ssys, [
     cl.f.x(k-1) => 0,
